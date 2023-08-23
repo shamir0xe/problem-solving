@@ -3,11 +3,14 @@ from __future__ import annotations
 
 class Mediator:
     def read_input(self) -> Mediator:
-        self.inputs = [self.a, self.b]
+        self.inputs = (input(), input())
         return self
 
     def solve(self, *args):
-        return self.ans
+        in1, in2 = args
+        ans = "ok"
+        return ans
+
 
 def main():
     mediator = Mediator().read_input()

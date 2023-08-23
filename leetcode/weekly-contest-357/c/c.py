@@ -23,25 +23,21 @@ class Mediator:
         def can_go(m: int) -> bool:
             if dist[0][0] < m:
                 return False
-            bbfs = deque()
+            bbfs: deque = deque()
             check = [[0 for _ in range(n)] for _ in range(n)]
             bbfs.append((0, 0))
             check[0][0] = 1
             while True:
                 try:
                     x, y = bbfs.popleft()
-                except:
+                except BaseException:
                     break
                 for delta_x, delta_y in directions:
                     xx, yy = x + delta_x, y + delta_y
-                    if (
-                        in_range(xx, yy)
-                        and check[xx][yy] == 0
-                        and dist[xx][yy] >= m
-                    ):
+                    if in_range(xx, yy) and check[xx][yy] == 0 and dist[xx][yy] >= m:
                         check[xx][yy] = 1
                         bbfs.append((xx, yy))
-            return check[n - 1][n - 1]
+            return check[n - 1][n - 1] == 1
 
         bfs = deque()
         for i in range(n):
@@ -52,7 +48,7 @@ class Mediator:
         while True:
             try:
                 x, y = bfs.popleft()
-            except:
+            except BaseException:
                 break
             for delta_x, delta_y in directions:
                 xx, yy = x + delta_x, y + delta_y
@@ -81,3 +77,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
