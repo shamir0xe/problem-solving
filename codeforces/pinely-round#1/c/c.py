@@ -1,13 +1,12 @@
 from __future__ import annotations
 from collections.abc import Iterable
-from typing import List, Set
+from typing import List
 import os
 import io
 
 input = io.BytesIO(os.read(0, os.fstat(0).st_size)).readline
 
-# TODO: askdj asdlkj
-# FIX:a sdkajsd 
+
 class Pair(Iterable):
     def __init__(self, *args) -> None:
         self.pair: tuple = (*args,)
@@ -17,16 +16,11 @@ class Pair(Iterable):
 
         return x[0] > y[0] if x[0] != y[0] else x[1] < y[1]
 
-
     def __iter__(self):
         return self.pair.__iter__()
 
 
 class Mediator:
-
-
-
-
     def read_input(self) -> Mediator:
         n = int(input())
         board: List[List[bool]] = []
@@ -51,8 +45,8 @@ class Mediator:
                     sources.remove(i)
                     break
         # create the list of sets for each index
-        sets_list: List[set] = [set() for _ in range(n)]
-        pq: Set[Pair] = set()
+        sets_list: list[set[int]] = [set() for _ in range(n)]
+        pq: set[Pair] = set()
         # assign indices for each source
         counter = 0
         for node in sources:
