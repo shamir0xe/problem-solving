@@ -6,20 +6,27 @@ import io
 
 input = io.BytesIO(os.read(0, os.fstat(0).st_size)).readline
 
-
+# TODO: askdj asdlkj
+# FIX:a sdkajsd 
 class Pair(Iterable):
     def __init__(self, *args) -> None:
         self.pair: tuple = (*args,)
 
     def __le__(self, other: Pair):
         x, y = self.pair, other.pair
+
         return x[0] > y[0] if x[0] != y[0] else x[1] < y[1]
+
 
     def __iter__(self):
         return self.pair.__iter__()
 
 
 class Mediator:
+
+
+
+
     def read_input(self) -> Mediator:
         n = int(input())
         board: List[List[bool]] = []
