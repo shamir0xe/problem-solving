@@ -5,8 +5,8 @@ sys.setrecursionlimit(2 * 10**5)
 # input = io.BytesIO(os.read(0, os.fstat(0).st_size)).readline
 
 ## generated template for competetive programming
-## problem {} ({}/{})
-## {}, {}
+## problem C (3/6)
+## codeforces, 836-div2
 ## author: @shamir0xe
 ## verdict: [AC/WA/TLE/MLE]
 

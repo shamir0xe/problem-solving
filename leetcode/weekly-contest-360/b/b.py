@@ -4,38 +4,43 @@ import sys
 sys.setrecursionlimit(2 * 10**5)
 
 ## generated template for competetive programming
-## problem {} ({}/{})
-## {}, {}
+## problem B (2/4)
+## leetcode, weekly-contest-360
 ## author: @shamir0xe
-## verdict: [AC/WA/TLE/MLE]
+## verdict: [AC]
 
 
 # define variables
 n: int = 0
-some_list: list[int]
+target: int = 0
 
 
 # define other functions here
-def fn():
-    return (n**2,)
+def range_sum(a, b):
+    return (a + b) * (b - a + 1) // 2
 
 
 class Mediator:
     def read_input(self) -> Mediator:
-        global n, some_list
+        global n, target
         readline = sys.stdin.readline
 
         n = int(readline().rstrip())
-        some_list = list(map(int, readline().split()))
+        target = int(readline().rstrip())
         return self
 
     def solve(self):
         """
         main logic comes here
         """
-        global n, some_list
+        global n, target
+        # print(range_sum(1, target // 2))
+        # print(range_sum(target, n + target // 2 - 1))
+        if n >= target // 2 + 1:
+            return range_sum(1, target // 2) + range_sum(target, n + (target - 1) // 2)
+        else:
+            return range_sum(1, n)
 
-        return (fn(),) 
 
 
 def main():

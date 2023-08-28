@@ -5,15 +5,16 @@ sys.setrecursionlimit(2 * 10**5)
 # input = io.BytesIO(os.read(0, os.fstat(0).st_size)).readline
 
 ## generated template for competetive programming
-## problem {} ({}/{})
-## {}, {}
+## problem A (1/6)
+## codeforces, 836-div2
 ## author: @shamir0xe
-## verdict: [AC/WA/TLE/MLE]
+## verdict: [AC]
 
 
 # define variables
 n: int = 0
 some_list: list[int]
+string: str
 
 
 # define other functions here
@@ -23,20 +24,17 @@ def fn():
 
 class Mediator:
     def read_input(self) -> Mediator:
-        global n, some_list
+        global string
         readline = sys.stdin.readline
-
-        n = int(readline().rstrip())
-        some_list = list(map(int, readline().split()))
+        string = readline().rstrip()
         return self
 
     def solve(self) -> Mediator:
         """
         main logic comes here
         """
-        global n, some_list
-
-        self.ans = (fn(),)
+        global string
+        self.ans = ("".join([string, string[::-1]]),)
         return self
 
     def print_output(self) -> None:
@@ -56,4 +54,4 @@ def main(test_case: bool = False):
 
 
 if __name__ == "__main__":
-    main(False)
+    main(True)
