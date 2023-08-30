@@ -101,8 +101,6 @@ class Mediator:
             for j in range(m):
                 if board[i][j] >= 0:
                     add_edge(i, j, board[i][j])
-
-        # print('yolo')
         ans = 1
         for i in range(n):
             for j in range(m):
