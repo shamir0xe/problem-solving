@@ -107,7 +107,7 @@ int dfs(int u, int papa, int w, int depth) {
     weights[u] = weights[papa];
     if (w > 0)
         weights[u][w - 1] += 1;
-    for (auto const &[v, w] : adj[u]) {
+    for (auto const &[v, w]: adj[u]) {
         if (v != papa) {
             dfs(v, u, w, depth + 1);
         }
@@ -116,7 +116,7 @@ int dfs(int u, int papa, int w, int depth) {
 }
 
 inline int merge_weights(vi &a, vi &b) {
-    for (int &k : range(MAX_W)) {
+    for (int &k: range(MAX_W)) {
         a[k] += b[k];
     }
     return 0;
@@ -124,8 +124,8 @@ inline int merge_weights(vi &a, vi &b) {
 
 int calc_lca() {
     int n = sz(adj);
-    for (int &j : range(1, MAX_M)) {
-        for (int &i : range(n)) {
+    for (int &j: range(1, MAX_M)) {
+        for (int &i: range(n)) {
             par_lca[i][j] = par_lca[par_lca[i][j - 1]][j - 1];
         }
     }
@@ -154,7 +154,7 @@ vi lca(int u, int v) {
         }
         common_ancestor = par_lca[u][0];
     }
-    for (int &k : range(MAX_W)) {
+    for (int &k: range(MAX_W)) {
         ans[k] -= 2 * weights[common_ancestor][k];
     }
     return ans;
@@ -167,7 +167,7 @@ class Solution {
         adj.clear();
         weights.clear();
         adj.resize(n);
-        for (auto const &edge : edges) {
+        for (auto const &edge: edges) {
             int u = edge[0];
             int v = edge[1];
             int w = edge[2];
@@ -180,7 +180,7 @@ class Solution {
         dfs(0, 0, 0, 0);
         calc_lca();
         vi ans;
-        for (auto const &query : queries) {
+        for (auto const &query: queries) {
             int u = query[0];
             int v = query[1];
             vi merged_weights = lca(u, v);
@@ -194,12 +194,12 @@ class Solution {
 int read_input() {
     int t;
     cin >> n >> t;
-    for (int &i : range(n - 1)) {
+    for (int &i: range(n - 1)) {
         int u, v, w;
         cin >> u >> v >> w;
         edges.push_back(vi{u, v, w});
     }
-    for (int &i : range(t)) {
+    for (int &i: range(t)) {
         int u, v;
         cin >> u >> v;
         queries.push_back(vi{u, v});
