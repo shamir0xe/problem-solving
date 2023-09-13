@@ -3,10 +3,10 @@ using namespace std;
 
 /**
  * generated template for competetive programming
- * problem E (5/6)
- * codeforces, codeforces-round-897-div2
+ * problem {} ({}/{})
+ * {}, {}
  * author: @shamir0xe
- * verdict: [AC]
+ * verdict: [AC/WA/TLE/MLE]
  **/
 
 typedef long long ll;
@@ -89,12 +89,45 @@ inline vi range(int n) { return range(0, n); }
 
 // define variables here
 #define MAX_M 15
-int n, k;
+int n;
+string s1, s2;
 
 // define functions here
+inline void smax(int &a, const int b) {
+    if (a < b)
+        a = b;
+}
+class Solution {
+  public:
+    int longestCommonSubsequence(string text1, string text2) {
+        int n, m;
+        n = sz(text1);
+        m = sz(text2);
+        vvi dp = vvi(n, vi(m, 0));
+        if (text1[0] == text2[0])
+            dp[0][0] = 1;
+        for (int i: range(1, n)) {
+            dp[i][0] = dp[i - 1][0];
+            smax(dp[i][0], text1[i] == text2[0] ? 1 : 0);
+        }
+        for (int j: range(1, m)) {
+            dp[0][j] = dp[0][j - 1];
+            smax(dp[0][j], text1[0] == text2[j] ? 1 : 0);
+        }
+        for (int i: range(1, n)) {
+            for (int j: range(1, m)) {
+                dp[i][j] = dp[i - 1][j];
+                smax(dp[i][j], dp[i][j - 1]);
+                if (text1[i] == text2[j])
+                    smax(dp[i][j], 1 + dp[i - 1][j - 1]);
+            }
+        }
+        return dp[n - 1][m - 1];
+    }
+};
 
 int read_input() {
-    cin >> n >> k;
+    cin >> s1 >> s2;
     return 0;
 }
 
@@ -102,48 +135,22 @@ auto solve() {
     /**
      * main logic goes here
      **/
-    int ans = 0;
-    for (int i = 0; i + k <= n; i += k) {
-        cout << "? " << i + 1 << endl;
-        cout.flush();
-        int temp;
-        cin >> temp;
-        ans ^= temp;
-    }
-    if (n % k != 0) {
-        vi starts = {n - n % k + (n % k) / 2 - k, n - k};
-        for (int i: starts) {
-            cout << "? " << i + 1 << endl;
-            cout.flush();
-            int temp;
-            cin >> temp;
-            ans ^= temp;
-        }
-    }
-    // for (int i = n - n % k + k / 2; i < n; i += k >> 1) {
-    //     int start_idx = i - k + 1;
-    //     // trace(i _ start_idx);
-    //     cout << "? " << start_idx + 1 << endl;
-    //     cout.flush();
-    //     int temp; cin >> temp;
-    //     ans ^= temp;
-    // }
-    cout << "! " << ans << endl;
-    cout.flush();
-    // return ans;
+    Solution solution = Solution();
+    auto ans = solution.longestCommonSubsequence(s1, s2);
+    return ans;
 }
 
 int second_main() {
     read_input();
-    solve();
-    // cout << ans << endl;
+    auto ans = solve();
+    cout << ans << endl;
     return 0;
 }
 
 int main() {
-    // ios_base::sync_with_stdio(false);
-    // cin.tie(0);
-    bool test_case = true;
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);
+    bool test_case = false;
     if (test_case) {
         int t;
         cin >> t;
