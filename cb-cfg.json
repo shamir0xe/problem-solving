@@ -1,0 +1,21 @@
+{
+    "problemset": {
+        "folder": {
+            "name": "problemset"
+        }
+    },
+    "templates": {
+        "leetcode": {
+            "cpp": ["templates", "lc-template.cpp"],
+            "py": ["templates", "lc-template.py"]
+        },
+        "codeforces": {
+            "cpp": ["templates", "template.cpp"],
+            "py": ["templates", "template.py"] 
+        },
+        "defaults": {
+            "cpp": ["templates", "template.cpp"],
+            "py": ["templates", "template.py"]         
+        }
+    }
+}
