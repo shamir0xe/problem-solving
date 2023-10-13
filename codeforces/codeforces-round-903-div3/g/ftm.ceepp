@@ -1,0 +1,128 @@
+//  ~ Be Name Khoda ~  //
+
+#include <bits/stdc++.h>
+//#pragma GCC optimize ("O3")
+//#pragma GCC target("avx2")
+//#pragma GCC optimize("unroll-loops,Ofast")
+
+using namespace std;
+
+typedef long long ll;
+
+#define debug(x)  cerr << "(" << (#x) << "): " << (x) << endl
+#define all(x)    x.begin(), x.end()
+#define pb        push_back
+#define mp        make_pair
+#define fi        first
+#define se        second
+
+const int maxn  =  1e6   + 10;
+const int maxn5 =  5e5   + 10;
+const int maxnt =  1.2e6 + 10;
+const int maxn3 =  1e3   + 10;
+const int mod   =  1e9   + 7;
+const ll  inf   =  1e18;
+
+struct fen{
+    int fen[maxn5];
+
+    void add(int id, int val){
+        for(++id; id < maxn5; id += id & -id)
+            fen[id] += val;
+    }
+
+    int get(int id){
+        int ret = 0;
+        for(++id; id; id -= id & -id)
+            ret += fen[id];
+        return ret;
+    }
+
+    int get(int l, int r){
+        if(l > r)
+            return 0;
+        return get(r) - (l ? get(l - 1) : 0);
+    }
+} fen[2];
+
+int a[2][maxn5];
+int n;
+
+void upd(int id, int ty, int val){
+    if(id >= n)
+        return;
+    if(ty == 0 && id == 0)
+        return;
+    if(ty == 1 && id < 2)
+        return;
+    int ch = (a[ty][id] == 0) * -1;
+    a[ty][id] = (26 + a[ty][id] + val) % 26;
+    ch += a[ty][id] == 0;
+    if(ch)
+        fen[ty].add(id, ch);
+}
+
+int main()
+{
+    ios_base::sync_with_stdio(false); cin.tie(0);
+
+    int tt; cin >> tt;
+    while(tt--){
+        int m; cin >> n >> m;
+        string s; cin >> s;
+        for(int i = 1; i < n; i++){
+            a[0][i] = (26 + s[i] - s[i - 1]) % 26;
+            if(i > 1)
+                a[1][i] = (26 + s[i] - s[i - 2]) % 26;
+            if(s[i] == s[i - 1])
+                fen[0].add(i, 1);
+            if(i > 1 && s[i] == s[i - 2])
+                fen[1].add(i, 1);
+        }
+        while(m--){
+            int ty, l, r; cin >> ty >> l >> r;
+            l--; r--;
+            if(ty == 1){
+                int x; cin >> x;
+                x %= 26;
+
+                upd(l, 0, x);
+                upd(l, 1, x);
+                if(r != l)
+                    upd(l + 1, 1, x);
+                upd(r + 1, 0, -x);
+                upd(r + 2, 1, -x);
+                if(r != l)
+                    upd(r + 1, 1, -x);
+
+
+            }
+            else{
+                cout << (fen[0].get(l + 1, r) == 0 && fen[1].get(l + 2, r) == 0 ? "YES\n" : "NO\n");
+            }
+        }
+        for(int i = 1; i < n; i++){
+            if(!a[0][i])
+                fen[0].add(i, -1);
+            if(i > 1 && !a[1][i])
+                fen[1].add(i, -1);
+        }
+    }
+}
+
+
+
+/*
+1
+12 3
+tedubcyyxopz
+2 2 5
+1 4 8 2
+2 1 7
+
+tedubcyyxopz
+
+*/
+
+
+
