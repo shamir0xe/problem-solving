@@ -102,13 +102,16 @@ int read_input() {
     cin >> n >> k;
     marked.assign(n, 0);
     for (int i: range(k)) {
-        int temp; cin >> temp;
+        int temp;
+        cin >> temp;
         marked[temp - 1] = 1;
     }
     adj.assign(n, vi());
     for (int i: range(n - 1)) {
-        int u, v; cin >> u >> v;
-        u--; v--;
+        int u, v;
+        cin >> u >> v;
+        u--;
+        v--;
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
@@ -116,20 +119,25 @@ int read_input() {
 }
 
 void smax(int &a, int b) {
-    if (a < b) a = b;
+    if (a < b)
+        a = b;
 }
 
 void smin(int &a, int b) {
-    if (a > b) a = b;
+    if (a > b)
+        a = b;
 }
 
 int root(int u, int papa) {
     int &result = max_dist[u];
-    if (marked[u]) smax(result, 0);
+    if (marked[u])
+        smax(result, 0);
     for (int v: adj[u]) {
-        if (v == papa) continue;
+        if (v == papa)
+            continue;
         int res = root(v, u);
-        if (res == -1) continue;
+        if (res == -1)
+            continue;
         smax(result, res + 1);
     }
     return result;
@@ -137,38 +145,33 @@ int root(int u, int papa) {
 
 void dfs(int u, int papa, int max_papa) {
     multiset<int> ms;
-    // trace(u+1 _ papa _ max_papa _ max_dist[u]);
     int &result = answers[u];
     result = max_dist[u];
-    if (max_papa == -1 && marked[u]) max_papa = 0;
+    if (max_papa == -1 && marked[u])
+        max_papa = 0;
     if (max_papa != -1) {
         ms.insert(max_papa + 1);
         smax(result, max_papa);
     }
     for (int v: adj[u]) {
-        if (v == papa) continue;
+        if (v == papa)
+            continue;
         int temp = max_dist[v];
         if (temp != -1)
             ms.insert(temp + 2);
     }
-    // if (u == 5) {
-    // trace(u+1);
-    // for (int t: ms) {
-    //     trace(t);
-    // }
-    // }
     for (int v: adj[u]) {
-        if (v == papa) continue;
-        
+        if (v == papa)
+            continue;
         int temp = max_dist[v];
         if (temp != -1)
-            ms.erase(ms.lower_bound(temp+2));
+            ms.erase(ms.lower_bound(temp + 2));
         int cur = -1;
         if (sz(ms) > 0)
             cur = *ms.rbegin();
         dfs(v, u, cur);
         if (temp != -1)
-            ms.insert(temp+2);
+            ms.insert(temp + 2);
     }
 }
 
@@ -183,7 +186,6 @@ auto solve() {
     // trace(answers);
     int ans = *min_element(all(answers));
     return ans;
-
 }
 
 int second_main() {
@@ -215,4 +217,3 @@ int main() {
 // 1
 // 4
 // 5
-
