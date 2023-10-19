@@ -73,6 +73,24 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
     return os;
 }
 
+template <typename T>
+void smin(
+    T &a, T b, function<void(void)> callable = []() {}) {
+    if (a > b) {
+        a = b;
+        callable();
+    }
+}
+
+template <typename T>
+void smax(
+    T &a, T b, function<void(void)> callable = []() {}) {
+    if (a < b) {
+        a = b;
+        callable();
+    }
+}
+
 /**
  * range functions
  **/
