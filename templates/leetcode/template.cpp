@@ -73,18 +73,18 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
     return os;
 }
 
-template <typename T>
+template <typename T, typename K = function<void(void)>>
 void smin(
-    T &a, T b, function<void(void)> callable = []() {}) {
+    T &a, T b, const K callable = []() {}) {
     if (a > b) {
         a = b;
         callable();
     }
 }
 
-template <typename T>
+template <typename T, typename K = function<void(void)>>
 void smax(
-    T &a, T b, function<void(void)> callable = []() {}) {
+    T &a, T b, const K callable = []() {}) {
     if (a < b) {
         a = b;
         callable();
