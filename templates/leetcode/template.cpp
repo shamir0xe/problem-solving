@@ -105,6 +105,14 @@ inline vi range(int idx, int n) {
 
 inline vi range(int n) { return range(0, n); }
 
+inline vi rrange(int idx, int n) {
+    vi order = range(idx, n);
+    reverse(all(order));
+    return order;
+}
+
+inline vi rrange(int n) { return rrange(0, n); }
+
 // define variables here
 #define MAX_M 15
 int n;

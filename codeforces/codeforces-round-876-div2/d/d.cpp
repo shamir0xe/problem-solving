@@ -169,9 +169,7 @@ auto solve() {
         int idx = -1;
         int cnt = 0;
         for (int j: range(n)) {
-            if (j > 0 && arr[j - 1] != j - 1)
-                cnt = 1;
-            smin(ans, j + dp[j][i - cnt], [&]() { idx = j; });
+            smin(ans, j + dp[j][i - (j ? 1 : 0)], [&]() { idx = j; });
         }
         // trace(ans _ i _ idx);
         cout << ans << ' ';
