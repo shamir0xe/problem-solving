@@ -1,15 +1,14 @@
 #include <bits/stdc++.h>
-using namespace std;
 
 template <class S, auto op, auto e, auto collect> class Node {
   public:
     S value, lazy_v;
     bool lazy = false;
     Node *le = nullptr, *ri = nullptr;
-    pair<int, int> interval = {-1, -1};
-    Node(pair<int, int> interval)
+    std::pair<int, int> interval = {-1, -1};
+    Node(std::pair<int, int> interval)
         : interval(interval), value(e()), lazy_v(e()) {}
-
+ 
     inline bool within(int lele, int riri) {
         return lele <= interval.first && interval.second <= riri;
     }
@@ -37,23 +36,23 @@ template <class S, auto op, auto e, auto collect> class Node {
         return value;
     }
     template <class _S, auto _op, auto _e, auto _collect>
-    friend ostream &operator<<(ostream &os,
+    friend std::ostream &operator<<(std::ostream &os,
                                const Node<_S, _op, _e, _collect> &node);
 };
-
+ 
 template <class S, auto op, auto e, auto collect>
-ostream &operator<<(ostream &os, const Node<S, op, e, collect> &node) {
+std::ostream &operator<<(std::ostream &os, const Node<S, op, e, collect> &node) {
     os << "[(" << node.interval.X << ", " << node.interval.Y
        << ") value: " << node.value << "]";
     return os;
 }
-
+ 
 template <class S, auto op, auto e, auto collect> class SegTree {
   private:
     typedef Node<S, op, e, collect> SgNode;
     SgNode *root;
-
-    void assign(SgNode *node, vector<S> &v, int le, int ri) {
+ 
+    void assign(SgNode *node, std::vector<S> &v, int le, int ri) {
         if (le == ri) {
             node->value = v[le];
             return;
@@ -65,7 +64,7 @@ template <class S, auto op, auto e, auto collect> class SegTree {
         assign(node->ri, v, ((le + ri) >> 1) + 1, ri);
         node->value = collect(node->ri->value, node->le->value);
     }
-
+ 
     void update_interval(SgNode *node, S x, int le, int ri) {
         if (node->within(le, ri)) {
             node->lazy_v = op(node->lazy_v, x);
@@ -79,7 +78,7 @@ template <class S, auto op, auto e, auto collect> class SegTree {
         update_interval(node->le, x, le, ri);
         update_interval(node->ri, x, le, ri);
     }
-
+ 
     S get_node(SgNode *node, int idx) {
         node->propagate();
         if (node->leaf())
@@ -88,7 +87,7 @@ template <class S, auto op, auto e, auto collect> class SegTree {
             return get_node(node->le, idx);
         return get_node(node->ri, idx);
     }
-
+ 
     S get_interval(SgNode *node, int le, int ri) {
         if (le > ri)
             return e();
@@ -103,7 +102,7 @@ template <class S, auto op, auto e, auto collect> class SegTree {
         return collect(get_interval(node->le, le, ri),
                        get_interval(node->ri, le, ri));
     }
-
+ 
     void set_node(SgNode *node, int idx, S x) {
         node->propagate();
         if (node->leaf()) {
@@ -116,19 +115,29 @@ template <class S, auto op, auto e, auto collect> class SegTree {
             set_node(node->ri, idx, x);
         node->value = collect(node->le->get_value(), node->ri->get_value());
     }
-
+ 
+    void deallocate(SgNode *node) {
+        if (!node->leaf()) {
+            deallocate(node->le);
+            deallocate(node->ri);
+        }
+        delete node;
+    }
+ 
   public:
-    SegTree(vector<S> v) {
+    SegTree(std::vector<S> v) {
         root = new SgNode({0, (int)v.size() - 1});
         assign(root, v, 0, (int)v.size() - 1);
     }
-
+ 
+    void deallocate() { deallocate(root); }
+ 
     S get(int idx) { return get_node(root, idx); }
-
+ 
     void set(int idx, S x) { set_node(root, idx, x); }
-
+ 
     S get_interval(int le, int ri) { return get_interval(root, le, ri); }
-
+ 
     void update(S x, int le, int ri) { update_interval(root, x, le, ri); }
 };
 
@@ -147,4 +156,6 @@ int sum_(int a, int b) { return a + b; }
 
 int e_0() { return 0; }
 
-SegTree<int, sum_26, e_0, max_> sg(vector<int>(100000));
+SegTree<int, sum_26, e_0, max_> segment_tree(std::vector<int>(100000));
+
+// segment_tree.deallocate();

@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-using namespace std;
 
 /**
  * problem F (6/6)
@@ -10,12 +9,12 @@ using namespace std;
  **/
 
 typedef long long ll;
-typedef pair<int, int> pii;
-typedef vector<int> vi;
-typedef vector<long long> vl;
-typedef vector<vector<int>> vvi;
-typedef vector<vector<ll>> vvl;
-#define trace(x) cerr << #x << " : " << x << endl
+typedef std::pair<int, int> pii;
+typedef std::vector<int> vi;
+typedef std::vector<long long> vl;
+typedef std::vector<std::vector<int>> vvi;
+typedef std::vector<std::vector<ll>> vvl;
+#define trace(x) std::cerr << #x << " : " << x << std::endl
 #define _ << " " <<
 #define sz(x) ((int)(x).size())
 #define all(x) (x).begin(), (x).end()
@@ -26,15 +25,16 @@ typedef vector<vector<ll>> vvl;
  * printing tuples
  **/
 template <size_t n, typename... T>
-typename enable_if<(n >= sizeof...(T))>::type
-__tuple_printer(ostream &os, const tuple<T...> &tup){};
+typename std::enable_if<(n >= sizeof...(T))>::type
+__tuple_printer(std::ostream &os, const std::tuple<T...> &tup){};
 
 template <size_t n, typename... T>
-typename enable_if<(n < sizeof...(T))>::type
-__tuple_printer(ostream &os, const tuple<T...> &tup) {
-    if (n != 0)
+typename std::enable_if<(n < sizeof...(T))>::type
+__tuple_printer(std::ostream &os, const std::tuple<T...> &tup) {
+    if (n != 0) {
         os << " ";
-    os << get<n>(tup);
+    }
+    os << std::get<n>(tup);
     __tuple_printer<n + 1>(os, tup);
 };
 
@@ -50,7 +50,7 @@ std::ostream &operator<<(std::ostream &os, const std::tuple<T...> &tup) {
  * printing pairs
  **/
 template <typename T, typename K>
-ostream &operator<<(std::ostream &os, const std::pair<T, K> &p) {
+std::ostream &operator<<(std::ostream &os, const std::pair<T, K> &p) {
     os << "(" << p.first << " " << p.second << ")";
     return os;
 }
@@ -63,17 +63,18 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
     os << "[";
     bool first = true;
     for (auto ii = v.begin(); ii != v.end(); ++ii) {
-        if (first)
+        if (first) {
             first = false;
-        else
+        } else {
             os << " ";
+        }
         os << (*ii);
     }
     os << "]";
     return os;
 }
 
-template <typename T, typename K = function<void(void)>>
+template <typename T, typename K = std::function<void(void)>>
 void smin(
     T &a, T b, const K callable = []() {}) {
     if (a > b) {
@@ -82,7 +83,7 @@ void smin(
     }
 }
 
-template <typename T, typename K = function<void(void)>>
+template <typename T, typename K = std::function<void(void)>>
 void smax(
     T &a, T b, const K callable = []() {}) {
     if (a < b) {
@@ -95,11 +96,13 @@ void smax(
  * range functions
  **/
 inline vi range(int idx, int n) {
-    if (n <= idx)
+    if (n <= idx) {
         return vi();
+    }
     vi indices(n - idx);
-    for (int i = idx; i < n; ++i)
+    for (int i = idx; i < n; ++i) {
         indices[i - idx] = i;
+    }
     return indices;
 }
 
@@ -113,39 +116,458 @@ inline vi rrange(int idx, int n) {
 
 inline vi rrange(int n) { return rrange(0, n); }
 
+class Reader {
+  public:
+    template <typename T> inline static T primitive() {
+        T temp;
+        std::cin >> temp;
+        return temp;
+    }
+
+    template <typename T> static std::vector<T> vector(int length) {
+        std::vector<T> res(length);
+        for (int &i: range(length)) {
+            res[i] = Reader::primitive<T>();
+        }
+        return res;
+    }
+
+    static void sync() {
+        std::ios_base::sync_with_stdio(false);
+        std::cin.tie(0);
+    }
+};
+
+namespace atcoder {
+
+namespace internal {
+
+#if __cplusplus >= 202002L
+
+using std::bit_ceil;
+
+#else
+
+// @return same with std::bit::bit_ceil
+unsigned int bit_ceil(unsigned int n) {
+    unsigned int x = 1;
+    while (x < (unsigned int)(n)) {
+        x *= 2;
+    }
+    return x;
+}
+
+#endif
+
+// @param n `1 <= n`
+// @return same with std::bit::countr_zero
+int countr_zero(unsigned int n) {
+#ifdef _MSC_VER
+    unsigned long index;
+    _BitScanForward(&index, n);
+    return index;
+#else
+    return __builtin_ctz(n);
+#endif
+}
+
+// @param n `1 <= n`
+// @return same with std::bit::countr_zero
+constexpr int countr_zero_constexpr(unsigned int n) {
+    int x = 0;
+    while (!(n & (1 << x))) {
+        x++;
+    }
+    return x;
+}
+
+} // namespace internal
+
+#if __cplusplus >= 201703L
+
+template <class S, auto op, auto e, class F, auto mapping, auto composition,
+          auto id>
+struct lazy_segtree {
+    static_assert(std::is_convertible_v<decltype(op), std::function<S(S, S)>>,
+                  "op must work as S(S, S)");
+    static_assert(std::is_convertible_v<decltype(e), std::function<S()>>,
+                  "e must work as S()");
+    static_assert(
+        std::is_convertible_v<decltype(mapping), std::function<S(F, S)>>,
+        "mapping must work as F(F, S)");
+    static_assert(
+        std::is_convertible_v<decltype(composition), std::function<F(F, F)>>,
+        "compostiion must work as F(F, F)");
+    static_assert(std::is_convertible_v<decltype(id), std::function<F()>>,
+                  "id must work as F()");
+
+#else
+
+template <class S, S (*op)(S, S), S (*e)(), class F, S (*mapping)(F, S),
+          F (*composition)(F, F), F (*id)()>
+struct lazy_segtree {
+
+#endif
+
+  public:
+    lazy_segtree() : lazy_segtree(0) {}
+    explicit lazy_segtree(int n) : lazy_segtree(std::vector<S>(n, e())) {}
+    explicit lazy_segtree(const std::vector<S> &v) : _n(int(v.size())) {
+        size = (int)internal::bit_ceil((unsigned int)(_n));
+        log = internal::countr_zero((unsigned int)size);
+        d = std::vector<S>(2 * size, e());
+        lz = std::vector<F>(size, id());
+        for (int i = 0; i < _n; i++) {
+            d[size + i] = v[i];
+        }
+        for (int i = size - 1; i >= 1; i--) {
+            update(i);
+        }
+    }
+
+    void set(int p, S x) {
+        assert(0 <= p && p < _n);
+        p += size;
+        for (int i = log; i >= 1; i--) {
+            push(p >> i);
+        }
+        d[p] = x;
+        for (int i = 1; i <= log; i++) {
+            update(p >> i);
+        }
+    }
+
+    S get(int p) {
+        assert(0 <= p && p < _n);
+        p += size;
+        for (int i = log; i >= 1; i--) {
+            push(p >> i);
+        }
+        return d[p];
+    }
+
+    S prod(int l, int r) {
+        assert(0 <= l && l <= r && r <= _n);
+        if (l == r) {
+            return e();
+        }
+
+        l += size;
+        r += size;
+
+        for (int i = log; i >= 1; i--) {
+            if (((l >> i) << i) != l) {
+                push(l >> i);
+            }
+            if (((r >> i) << i) != r) {
+                push((r - 1) >> i);
+            }
+        }
+
+        S sml = e(), smr = e();
+        while (l < r) {
+            if (l & 1) {
+                sml = op(sml, d[l++]);
+            }
+            if (r & 1) {
+                smr = op(d[--r], smr);
+            }
+            l >>= 1;
+            r >>= 1;
+        }
+
+        return op(sml, smr);
+    }
+
+    S all_prod() { return d[1]; }
+
+    void apply(int p, F f) {
+        assert(0 <= p && p < _n);
+        p += size;
+        for (int i = log; i >= 1; i--) {
+            push(p >> i);
+        }
+        d[p] = mapping(f, d[p]);
+        for (int i = 1; i <= log; i++) {
+            update(p >> i);
+        }
+    }
+    void apply(int l, int r, F f) {
+        assert(0 <= l && l <= r && r <= _n);
+        if (l == r) {
+            return;
+        }
+
+        l += size;
+        r += size;
+
+        for (int i = log; i >= 1; i--) {
+            if (((l >> i) << i) != l) {
+                push(l >> i);
+            }
+            if (((r >> i) << i) != r) {
+                push((r - 1) >> i);
+            }
+        }
+
+        {
+            int l2 = l, r2 = r;
+            while (l < r) {
+                if (l & 1) {
+                    all_apply(l++, f);
+                }
+                if (r & 1) {
+                    all_apply(--r, f);
+                }
+                l >>= 1;
+                r >>= 1;
+            }
+            l = l2;
+            r = r2;
+        }
+
+        for (int i = 1; i <= log; i++) {
+            if (((l >> i) << i) != l) {
+                update(l >> i);
+            }
+            if (((r >> i) << i) != r) {
+                update((r - 1) >> i);
+            }
+        }
+    }
+
+    template <bool (*g)(S)> int max_right(int l) {
+        return max_right(l, [](S x) { return g(x); });
+    }
+    template <class G> int max_right(int l, G g) {
+        assert(0 <= l && l <= _n);
+        assert(g(e()));
+        if (l == _n) {
+            return _n;
+        }
+        l += size;
+        for (int i = log; i >= 1; i--) {
+            push(l >> i);
+        }
+        S sm = e();
+        do {
+            while (l % 2 == 0) {
+                l >>= 1;
+            }
+            if (!g(op(sm, d[l]))) {
+                while (l < size) {
+                    push(l);
+                    l = (2 * l);
+                    if (g(op(sm, d[l]))) {
+                        sm = op(sm, d[l]);
+                        l++;
+                    }
+                }
+                return l - size;
+            }
+            sm = op(sm, d[l]);
+            l++;
+        } while ((l & -l) != l);
+        return _n;
+    }
+
+    template <bool (*g)(S)> int min_left(int r) {
+        return min_left(r, [](S x) { return g(x); });
+    }
+    template <class G> int min_left(int r, G g) {
+        assert(0 <= r && r <= _n);
+        assert(g(e()));
+        if (r == 0) {
+            return 0;
+        }
+        r += size;
+        for (int i = log; i >= 1; i--) {
+            push((r - 1) >> i);
+        }
+        S sm = e();
+        do {
+            r--;
+            while (r > 1 && (r % 2)) {
+                r >>= 1;
+            }
+            if (!g(op(d[r], sm))) {
+                while (r < size) {
+                    push(r);
+                    r = (2 * r + 1);
+                    if (g(op(d[r], sm))) {
+                        sm = op(d[r], sm);
+                        r--;
+                    }
+                }
+                return r + 1 - size;
+            }
+            sm = op(d[r], sm);
+        } while ((r & -r) != r);
+        return 0;
+    }
+
+  private:
+    int _n, size, log;
+    std::vector<S> d;
+    std::vector<F> lz;
+
+    void update(int k) { d[k] = op(d[2 * k], d[2 * k + 1]); }
+    void all_apply(int k, F f) {
+        d[k] = mapping(f, d[k]);
+        if (k < size) {
+            lz[k] = composition(f, lz[k]);
+        }
+    }
+    void push(int k) {
+        all_apply(2 * k, lz[k]);
+        all_apply(2 * k + 1, lz[k]);
+        lz[k] = id();
+    }
+};
+
+} // namespace atcoder
+
+struct S {
+    ll sum;
+    ll maxi;
+    ll mini;
+};
+
+bool zero_max(S t) { return t.maxi <= 0; }
+
+bool zero_min(S t) { return t.mini >= 0; }
+
+S op(const S &a, const S &b) {
+    return S{a.sum + b.sum, std::max(a.maxi, b.maxi), std::min(a.mini, b.mini)};
+}
+
+S e_0() { return S{0, (ll)-1e18, (ll)1e18}; }
+
+struct F {
+    ll b;
+};
+
+S mapping(const F &f, const S &x) {
+    return S{f.b + x.sum, f.b + x.maxi, f.b + x.mini};
+}
+
+F composition(const F &f, const F &g) { return F{f.b + g.b}; }
+
+F id() { return F{0}; }
+
 // define variables here
 #define MAX_M 15
 int n;
+vl arr;
+std::vector<std::pair<int, pii>> queries;
+atcoder::lazy_segtree<S, op, e_0, F, mapping, composition, id> tree;
 
 // define functions here
 
 int read_input() {
-    cin >> n;
+    std::cin >> n;
+    arr = Reader::vector<ll>(n);
+    int q;
+    std::cin >> q;
+    queries.clear();
+    while (q--) {
+        int l, r, x;
+        std::cin >> l >> r >> x;
+        queries.push_back({x, {l - 1, r - 1}});
+    }
     return 0;
+}
+
+inline void add(int l, int r, int x) { tree.apply(l, r + 1, F{x}); }
+
+void trees_init() {
+    tree = atcoder::lazy_segtree<S, op, e_0, F, mapping, composition, id>(
+        std::vector<S>(n));
+}
+
+int find_pos() {
+    if (tree.get(0).sum > 0) {
+        return 0;
+    }
+    int r = tree.max_right(0, zero_max);
+    if (r == n) {
+        return -1;
+    }
+    return r;
+}
+
+int find_neg() {
+    if (tree.get(0).sum < 0) {
+        return 0;
+    }
+    int r = tree.max_right(0, zero_min);
+    if (r == n) {
+        return -1;
+    }
+    return r;
 }
 
 auto solve() {
     /**
      * main logic goes here
      **/
-    auto ans = "Halo!";
-    return ans;
+    std::vector<pii> stack{{-1, -1}};
+    trees_init();
+    int best_idx = -1;
+    for (int i: range(sz(queries))) {
+        auto &[x, y] = queries[i];
+        auto &[l, r] = y;
+        add(l, r, x);
+        int idx_pos = find_pos();
+        int idx_neg = find_neg();
+        // trace(idx_pos _ idx_neg);
+        stack.push_back({i, idx_neg});
+        if (idx_neg != -1 && (idx_pos == -1 || idx_neg < idx_pos)) {
+            // we have a better answer here
+            // remove existing intervals
+            while (stack.back().X != -1) {
+                auto &[xx, yy] = queries[stack.back().X];
+                auto &[le, ri] = yy;
+                add(le, ri, -xx);
+                stack.pop_back();
+            }
+            best_idx = i;
+        }
+    }
+    // trace(best_idx);
+    if (best_idx == -1) {
+        return arr;
+    }
+    trees_init();
+    for (int i: range(best_idx + 1)) {
+        auto &[x, y] = queries[i];
+        auto &[l, r] = y;
+        add(l, r, x);
+    }
+    std::vector<ll> res;
+    for (int i: range(n)) {
+        res.push_back(tree.get(i).sum + arr[i]);
+    }
+    return res;
 }
 
 int second_main() {
     read_input();
     auto ans = solve();
-    cout << ans << endl;
+    for (auto &t: ans) {
+        std::cout << t << ' ';
+    }
+    std::cout << '\n';
     return 0;
 }
 
 int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(0);
-    bool test_case = false;
+    Reader::sync();
+
+    bool test_case = true;
     if (test_case) {
         int t;
-        cin >> t;
+        std::cin >> t;
         while (t--) {
             second_main();
         }

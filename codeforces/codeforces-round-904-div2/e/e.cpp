@@ -1,5 +1,5 @@
+#include <algorithm>
 #include <bits/stdc++.h>
-using namespace std;
 
 /**
  * problem E (5/5)
@@ -10,12 +10,12 @@ using namespace std;
  **/
 
 typedef long long ll;
-typedef pair<int, int> pii;
-typedef vector<int> vi;
-typedef vector<long long> vl;
-typedef vector<vector<int>> vvi;
-typedef vector<vector<ll>> vvl;
-#define trace(x) cerr << #x << " : " << x << endl
+typedef std::pair<int, int> pii;
+typedef std::vector<int> vi;
+typedef std::vector<long long> vl;
+typedef std::vector<std::vector<int>> vvi;
+typedef std::vector<std::vector<ll>> vvl;
+#define trace(x) std::cerr << #x << " : " << x << std::endl
 #define _ << " " <<
 #define sz(x) ((int)(x).size())
 #define all(x) (x).begin(), (x).end()
@@ -26,15 +26,16 @@ typedef vector<vector<ll>> vvl;
  * printing tuples
  **/
 template <size_t n, typename... T>
-typename enable_if<(n >= sizeof...(T))>::type
-__tuple_printer(ostream &os, const tuple<T...> &tup){};
+typename std::enable_if<(n >= sizeof...(T))>::type
+__tuple_printer(std::ostream &os, const std::tuple<T...> &tup){};
 
 template <size_t n, typename... T>
-typename enable_if<(n < sizeof...(T))>::type
-__tuple_printer(ostream &os, const tuple<T...> &tup) {
-    if (n != 0)
+typename std::enable_if<(n < sizeof...(T))>::type
+__tuple_printer(std::ostream &os, const std::tuple<T...> &tup) {
+    if (n != 0) {
         os << " ";
-    os << get<n>(tup);
+    }
+    os << std::get<n>(tup);
     __tuple_printer<n + 1>(os, tup);
 };
 
@@ -50,7 +51,7 @@ std::ostream &operator<<(std::ostream &os, const std::tuple<T...> &tup) {
  * printing pairs
  **/
 template <typename T, typename K>
-ostream &operator<<(std::ostream &os, const std::pair<T, K> &p) {
+std::ostream &operator<<(std::ostream &os, const std::pair<T, K> &p) {
     os << "(" << p.first << " " << p.second << ")";
     return os;
 }
@@ -63,17 +64,18 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
     os << "[";
     bool first = true;
     for (auto ii = v.begin(); ii != v.end(); ++ii) {
-        if (first)
+        if (first) {
             first = false;
-        else
+        } else {
             os << " ";
+        }
         os << (*ii);
     }
     os << "]";
     return os;
 }
 
-template <typename T, typename K = function<void(void)>>
+template <typename T, typename K = std::function<void(void)>>
 void smin(
     T &a, T b, const K callable = []() {}) {
     if (a > b) {
@@ -82,7 +84,7 @@ void smin(
     }
 }
 
-template <typename T, typename K = function<void(void)>>
+template <typename T, typename K = std::function<void(void)>>
 void smax(
     T &a, T b, const K callable = []() {}) {
     if (a < b) {
@@ -95,24 +97,63 @@ void smax(
  * range functions
  **/
 inline vi range(int idx, int n) {
-    if (n <= idx)
+    if (n <= idx) {
         return vi();
+    }
     vi indices(n - idx);
-    for (int i = idx; i < n; ++i)
+    for (int i = idx; i < n; ++i) {
         indices[i - idx] = i;
+    }
     return indices;
 }
 
 inline vi range(int n) { return range(0, n); }
 
-// define variables here
-#define MAX_M 15
-int n;
+inline vi rrange(int idx, int n) {
+    vi order = range(idx, n);
+    reverse(all(order));
+    return order;
+}
 
-// define functions here
+inline vi rrange(int n) { return rrange(0, n); }
+
+class Reader {
+  public:
+    template <typename T> inline static T primitive() {
+        T temp;
+        std::cin >> temp;
+        return temp;
+    }
+
+    template <typename T> static std::vector<T> vector(int n) {
+        std::vector<T> res(n);
+        for (int &i: range(n)) {
+            res[i] = Reader::primitive<T>();
+        }
+        return res;
+    }
+
+    static void sync() {
+        std::ios_base::sync_with_stdio(false);
+        std::cin.tie(nullptr);
+    }
+};
+
+/**
+ * define variables here
+ **/
+const int maxn = 1000 * 1000 + 10;
+const int mod = 1000 * 1000 * 1000 + 7;
+int n;
+vi arr;
+
+/**
+ * define functions here
+ **/
 
 int read_input() {
-    cin >> n;
+    std::cin >> n;
+    arr = Reader::vector<int>(n);
     return 0;
 }
 
@@ -120,24 +161,137 @@ auto solve() {
     /**
      * main logic goes here
      **/
-    auto ans = "Halo!";
-    return ans;
+    int init_idx = std::max_element(all(arr)) - arr.begin();
+    vi le(n, -1);
+    vi ri(n, -1);
+    vi order = range(n);
+    std::transform(all(order), order.begin(),
+                   [&](int i) { return (i + init_idx) % n; });
+    auto left = [&](int i) { return order[(i - 1 + n) % n]; };
+    auto right = [&](int i) { return order[(i + 1) % n]; };
+    vi stack;
+    for (int i: range(n)) {
+        if (arr[order[i]] < arr[left(i)]) {
+            le[order[i]] = left(i);
+            stack.push_back(left(i));
+        } else if (arr[order[i]] == arr[left(i)]) {
+            le[order[i]] = le[left(i)];
+        } else {
+            // arr[order[i]] > arr[left[i]]
+            while (sz(stack) > 0 && arr[order[i]] >= arr[stack.back()]) {
+                stack.pop_back();
+            }
+            if (sz(stack)) {
+                le[order[i]] = stack.back();
+            }
+            stack.push_back(order[i]);
+        }
+    }
+    stack.clear();
+    for (int i: rrange(n)) {
+        if (arr[order[i]] < arr[right(i)]) {
+            ri[order[i]] = right(i);
+            stack.push_back(right(i));
+        } else if (arr[order[i]] == arr[right(i)]) {
+            ri[order[i]] = ri[right(i)];
+        } else {
+            while (sz(stack) > 0 && arr[order[i]] >= arr[stack.back()]) {
+                stack.pop_back();
+            }
+            if (sz(stack)) {
+                ri[order[i]] = stack.back();
+            }
+            stack.push_back(order[i]);
+        }
+    }
+    std::set<std::tuple<int, int, int>> intervals;
+    for (int i: range(n)) {
+        if (le[order[i]] != -1) {
+            // we have interval here
+            intervals.emplace(
+                le[order[i]], ri[order[i]],
+                std::abs(arr[order[i]] -
+                         std::min(arr[le[order[i]]], arr[ri[order[i]]])));
+        }
+    }
+    int cost = 0;
+    auto get_len = [&](int l, int r) -> int {
+        return r - l + (r <= l ? n : 0) - 1;
+    };
+    auto add = [&](int a, int b) -> int { return (a + b) % mod; };
+    auto mul = [&](int a, int b) -> int { return (1ll * a * b) % mod; };
+    // index, type[0, 1], length, delta
+    std::vector<std::tuple<int, int, int, int>> events;
+    ll count = 0;
+    for (auto &[l, r, delta]: intervals) {
+        int length = get_len(l, r);
+        count += delta;
+        cost = add(cost, mul(delta, mul(length, length)));
+        events.emplace_back(l + 1, 1, length, delta);
+        events.emplace_back(l + length + 1, 0, length, delta);
+        if (l + length + 1 != r) {
+            events.emplace_back(r - length, 1, length, delta);
+            events.emplace_back(r, 0, length, delta);
+        }
+    }
+    for (int i: range(n)) {
+        events.emplace_back(i, 2, -1, -1);
+    }
+    std::sort(all(events));
+    int constant = 0;
+    int alive_cnt = 0;
+    int sum_idx = 0;
+    vl sum_deltas(n + 1, 0);
+    for (auto &[idx, type, length, delta]: events) {
+        if (idx < 0) {
+            alive_cnt += delta;
+            count += delta;
+            cost = add(cost, mul(delta, add(mod, -mul(length, length))));
+            cost = add(cost, mul(delta, add(mul(-idx, -idx),
+                                            mul(length + idx, length + idx))));
+            constant = add(constant, mul(delta, add(mod, mul(2, 1 - length))));
+            sum_idx = add(sum_idx, mul(delta, -idx));
+        } else {
+            if (idx >= n) {
+                break;
+            }
+            if (type == 1) {
+                // enter
+                alive_cnt += delta;
+                constant =
+                    add(constant, mul(delta, add(mod, mul(2, 1 - length))));
+                sum_deltas[idx] += delta;
+            } else if (type == 0) {
+                // exit
+                alive_cnt -= delta;
+                constant =
+                    add(constant, mul(delta, add(mod, mul(2, length - 1))));
+                sum_idx = add(sum_idx, mul(delta, add(mod, -length)));
+                count -= delta;
+            } else {
+                // current node
+                std::cout << count << ' ' << cost << '\n';
+                count += sum_deltas[idx];
+                cost = add(cost, add(constant, mul(4, sum_idx)));
+                sum_idx = add(sum_idx, alive_cnt);
+            }
+        }
+    }
 }
 
 int second_main() {
     read_input();
-    auto ans = solve();
-    cout << ans << endl;
+    solve();
+    // std::cout << ans << std::endl;
     return 0;
 }
 
 int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(0);
-    bool test_case = false;
+    Reader::sync();
+    bool test_case = true;
     if (test_case) {
         int t;
-        cin >> t;
+        std::cin >> t;
         while (t--) {
             second_main();
         }
