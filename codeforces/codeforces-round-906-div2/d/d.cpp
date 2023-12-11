@@ -159,32 +159,18 @@ auto solve() {
      * main logic goes here
      **/
     vi order = range(n);
-    sort(order.begin(), order.end(), [&](const int &i, const int &j) {
-        int t1 = arr[order[i]] * 1ll * (j + 1);
-        int t2 = arr[order[j]] * 1ll * (i + 1);
-        if (t1 != t2)
+    sort(order.begin() + 1, order.end(), [&](const int &i, const int &j) {
+        ll t1 = arr[i] - 1ll * c * (i + 1);
+        ll t2 = arr[j] - 1ll * c * (j + 1);
+        if (t1 != t2) {
             return t1 > t2;
-        // if (arr[order[i]] != arr[order[j]])
-        //     return arr[order[i]] > arr[order[j]];
-        return j < i;
-    });
-    ll sum = arr[order[0]];
-    int min = order[0] + 1;
-    vi leftover;
-    for (int i: range(1, n)) {
-        // trace(sum _ order[i]+1 _ arr[order[i]] _ 1ll * (order[i] + 1) * c);
-        if (sum + arr[order[i]] >= 1ll * min * (order[i] + 1) * c) {
-            sum += arr[order[i]];
-            min = std::min(min, order[i] + 1);
-        } else {
-            leftover.push_back(i);
         }
-    }
-    std::reverse(all(leftover));
-    for (int i: leftover) {
-        if (sum + arr[order[i]] >= 1ll * min * (order[i] + 1) * c) {
+        return i < j;
+    });
+    ll sum = arr[0];
+    for (int i: range(1, n)) {
+        if (sum + arr[order[i]] >= 1ll * (order[i] + 1) * c) {
             sum += arr[order[i]];
-            min = std::min(min, order[i] + 1);
         } else {
             return false;
         }

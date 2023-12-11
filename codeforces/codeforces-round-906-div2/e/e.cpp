@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <functional>
 
 /**
  * problem E (5/6)
@@ -142,13 +143,21 @@ class Reader {
  * define variables here
  **/
 const int maxn = 1000 * 100 + 5;
-int n;
+int n, m, k;
+std::vector<std::tuple<int, int, int>> events;
 
 /**
  * define functions here
  **/
 int read_input() {
-    std::cin >> n;
+    std::cin >> n >> m >> k;
+    events.clear();
+    for (int i: range(m)) {
+        int l, r;
+        std::cin >> l >> r;
+        events.emplace_back(l - 1, 1, i);
+        events.emplace_back(r, 0, i);
+    }
     return 0;
 }
 
@@ -156,9 +165,54 @@ auto solve() {
     /**
      * main logic goes here
      **/
-
+    std::map<int, int> mp0;
+    std::map<pii, int> mp1;
+    std::set<int> current;
+    for (int i: range(n)) {
+        events.emplace_back(i, 2, -1);
+    }
+    sort(all(events));
+    int constant = 0;
+    for (auto &[idx, type, interval_idx]: events) {
+        if (type == 1) {
+            current.insert(interval_idx);
+        } else if (type == 0) {
+            current.erase(current.find(interval_idx));
+        } else {
+            // normal index
+            if (sz(current) == 0) {
+                constant++;
+                continue;
+            }
+            if (sz(current) > 2) {
+                continue;
+            }
+            if (sz(current) == 1) {
+                int idx = *current.begin();
+                mp0[idx]++;
+                continue;
+            }
+            // sz == 2
+            auto itr = current.begin();
+            int idx1 = *itr++;
+            int idx2 = *itr++;
+            mp1[{idx1, idx2}]++;
+        }
+    }
     int ans = 0;
-    return ans;
+    for (auto &itr: mp1) {
+        int i = itr.first.first;
+        int j = itr.first.second;
+        int cnt = itr.second;
+        smax(ans, cnt + mp0[i] + mp0[j]);
+    }
+    vi best2(3, 0);
+    for (auto &itr: mp0) {
+        best2[2] = itr.second;
+        std::sort(all(best2), [&](int i, int j) { return i > j; });
+    }
+    smax(ans, best2[0] + best2[1]);
+    return ans + constant;
 }
 
 int second_main() {
@@ -170,7 +224,7 @@ int second_main() {
 
 int main() {
     Reader::sync();
-    bool test_case = false;
+    bool test_case = true;
     if (test_case) {
         int t;
         std::cin >> t;

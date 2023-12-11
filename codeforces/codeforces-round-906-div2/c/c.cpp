@@ -158,8 +158,9 @@ auto solve() {
     /**
      * main logic goes here
      **/
-    if (n % 2 == 1)
+    if (n % 2 == 1) {
         return range(301);
+    }
     vi ans;
     int i = 0;
     int j = n - 1;
@@ -190,9 +191,9 @@ auto solve() {
 int second_main() {
     read_input();
     auto ans = solve();
-    if (sz(ans) > 300)
+    if (sz(ans) > 300) {
         std::cout << -1 << std::endl;
-    else {
+    } else {
         std::cout << sz(ans) << std::endl;
         for (int t: ans) {
             std::cout << t + 1 << ' ';

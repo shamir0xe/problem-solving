@@ -147,23 +147,22 @@ int n;
 /**
  * define functions here
  **/
-int read_input() {
-    std::cin >> n;
-    return 0;
-}
 
 auto solve() {
     /**
      * main logic goes here
      **/
-
+    std::cin >> n;
     int ans = 0;
+
     return ans;
 }
 
 int second_main() {
-    read_input();
     auto ans = solve();
+    // for (int i: range(sz(ans))) {
+    //     std::cout << ans[i] << " \n"[i == sz(ans) - 1];
+    // }
     std::cout << ans << std::endl;
     return 0;
 }
