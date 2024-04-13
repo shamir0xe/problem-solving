@@ -12,7 +12,7 @@
   "executor": {
     "commands": {
       "cpp": {
-        "compile": "g++ -std=c++17 -O2 {} -o out",
+        "compile": "g++ -std=c++17 -O2 -w {}  -o out",
         "run": "./out"
       },
       "python": {
