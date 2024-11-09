@@ -14,7 +14,7 @@ typedef std::vector<int> vi;
 typedef std::vector<long long> vl;
 typedef std::vector<std::vector<int>> vvi;
 typedef std::vector<std::vector<ll>> vvl;
-#define trace(x) std::cerr << #x << " : " << x << std::endl
+#define trace(x) std::cout << #x << " : " << x << std::endl
 #define _ << " " <<
 #define sz(x) ((int)(x).size())
 #define all(x) (x).begin(), (x).end()
