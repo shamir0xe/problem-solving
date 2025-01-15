@@ -22,26 +22,60 @@
   },
   "providers": {
     "codeforces": {
-      "abbreviations": ["codeforces", "cf", "code"]
+      "abbreviations": [
+        "codeforces",
+        "cf",
+        "code"
+      ]
     },
     "leetcode": {
-      "abbreviations": ["leetcode", "lc", "leet"]
+      "abbreviations": [
+        "leetcode",
+        "lc",
+        "leet"
+      ]
     },
     "atcoder": {
-      "abbreviations": ["atcoder", "at", "atc"]
+      "abbreviations": [
+        "atcoder",
+        "at",
+        "atc"
+      ]
+    },
+    "codewars": {
+      "abbreviations": [
+        "codewars",
+        "cw",
+        "codew"
+      ]
     },
     "local": {
-      "abbreviations": ["local"]
+      "abbreviations": [
+        "local"
+      ]
     }
   },
   "languages": {
     "cpp": {
-      "abbreviations": ["cpp", "c++", "seepp"],
-      "extensions": ["cpp", "hpp"]
+      "abbreviations": [
+        "cpp",
+        "c++",
+        "seepp"
+      ],
+      "extensions": [
+        "cpp",
+        "hpp"
+      ]
     },
     "python": {
-      "abbreviations": ["python", "py", "python3"],
-      "extensions": ["py"]
+      "abbreviations": [
+        "python",
+        "py",
+        "python3"
+      ],
+      "extensions": [
+        "py"
+      ]
     }
   },
   "problemset": {
@@ -51,20 +85,64 @@
   },
   "templates": {
     "leetcode": {
-      "cpp": ["templates", "leetcode", "template.cpp"],
-      "python": ["templates", "leetcode", "template.py"]
+      "cpp": [
+        "templates",
+        "leetcode",
+        "template.cpp"
+      ],
+      "python": [
+        "templates",
+        "leetcode",
+        "template.py"
+      ]
     },
     "codeforces": {
-      "cpp": ["templates", "codeforces", "template.cpp"],
-      "python": ["templates", "codeforces", "template.py"]
+      "cpp": [
+        "templates",
+        "codeforces",
+        "template.cpp"
+      ],
+      "python": [
+        "templates",
+        "codeforces",
+        "template.py"
+      ]
     },
     "atcoder": {
-      "cpp": ["templates", "codeforces", "template.cpp"],
-      "python": ["templates", "codeforces", "template.py"]
+      "cpp": [
+        "templates",
+        "codeforces",
+        "template.cpp"
+      ],
+      "python": [
+        "templates",
+        "codeforces",
+        "template.py"
+      ]
+    },
+    "codewars": {
+      "cpp": [
+        "templates",
+        "codeforces",
+        "template.cpp"
+      ],
+      "python": [
+        "templates",
+        "codeforces",
+        "template.py"
+      ]
     },
     "local": {
-      "cpp": ["templates", "codeforces", "template.cpp"],
-      "python": ["templates", "codeforces", "template.py"]
+      "cpp": [
+        "templates",
+        "codeforces",
+        "template.cpp"
+      ],
+      "python": [
+        "templates",
+        "codeforces",
+        "template.py"
+      ]
     }
   }
 }
