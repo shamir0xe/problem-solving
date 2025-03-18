@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bits/stdc++.h>
 #include <functional>
 
@@ -15,7 +16,7 @@ typedef std::vector<int> vi;
 typedef std::vector<long long> vl;
 typedef std::vector<std::vector<int>> vvi;
 typedef std::vector<std::vector<ll>> vvl;
-#define trace(x) std::cerr << #x << " : " << x << std::endl
+#define trace(x) std::cout << #x << " : " << x << std::endl
 #define _ << " " <<
 #define sz(x) ((int)(x).size())
 #define all(x) (x).begin(), (x).end()
@@ -137,52 +138,131 @@ class Reader {
     }
 };
 
-template <typename T, typename K> class Node {
+template <typename K> class Node {
   public:
-    std::pair<T, T> idx_range;
+    std::pair<int, int> idx_range;
     K aggr_value;
-    Node<T, K> *le, *ri;
+    Node<K> *le, *ri;
+    int aggr_idx;
 
-    Node(std::pair<T, T> idx_range, K aggr_value) {
+    bool is_leaf() {
+        return this->idx_range.first == this->idx_range.second - 1;
+    }
+
+    Node(int idx, K aggr_value) {
+        this->idx_range = {idx, idx + 1};
+        this->aggr_idx = idx;
+        this->aggr_value = aggr_value;
+        this->le = NULL;
+        this->ri = NULL;
+    }
+
+    Node(std::pair<int, int> idx_range, K aggr_value) {
         this->idx_range = idx_range;
+        this->aggr_idx = idx_range.first;
         this->aggr_value = aggr_value;
         this->le = NULL;
         this->ri = NULL;
     }
 };
 
-template <typename T, typename K> class SegmentTree {
+template <typename T> class SegmentTree {
   public:
-    SegmentTree(std::vector<Node<T, K>> &nodes,
-                std::function<bool(Node<T, K>, Node<T, K>)> cmp_fn,
-                std::function<Node<T, K>(Node<T, K>, Node<T, K>)> aggr_fn) {
-        this->cmp_fn = cmp_fn;
-        this->aggr_fn = aggr_fn;
+    SegmentTree(std::vector<T> &nodes, std::function<T(T, T)> aggr_fn,
+                T identity)
+        : identity(identity), aggr_fn(aggr_fn) {
         this->root = this->initialize(nodes, 0, sz(nodes));
     };
 
-  private:
-    std::vector<Node<T, K>> nodes;
-    Node<T, K> root;
-    std::function<Node<T, K>(Node<T, K>, Node<T, K>)> aggr_fn;
-    std::function<bool(Node<T, K>, Node<T, K>)> cmp_fn;
+    std::pair<T, int> aggr_range(int le, int ri) {
+        // returns (aggregate_range, index) if feasible
+        return this->range_query(this->root, le, ri);
+    }
 
-    Node<T, K> *initialize(std::vector<Node<T, K>> &nodes, int le, int ri) {
+    int remove(int idx) { return this->remove(this->root, idx); }
+
+  private:
+    std::vector<Node<T> *> nodes;
+    Node<T> *root;
+    std::function<T(T, T)> aggr_fn;
+    T identity;
+
+    int remove(Node<T> *node, int idx) {
+        // trace("removing" _ idx _ node->idx_range);
+        if (node == NULL || idx < node->idx_range.first ||
+            node->idx_range.second <= idx) {
+            return -1;
+        }
+        if (node->is_leaf()) {
+            // leaf
+            // trace(node->idx_range _ "cleansed");
+            node->aggr_value = this->identity;
+            node->aggr_idx = -1;
+            return idx;
+        }
+        // not leaf
+        int res =
+            std::max(this->remove(node->le, idx), this->remove(node->ri, idx));
+        this->update(node);
+        return res;
+    }
+
+    void update(Node<T> *node) {
+        if (node->is_leaf()) {
+            return;
+        }
+        T aggr_le = node->le != NULL ? node->le->aggr_value : this->identity;
+        T aggr_ri = node->ri != NULL ? node->ri->aggr_value : this->identity;
+        node->aggr_value = this->aggr_fn(aggr_le, aggr_ri);
+        node->aggr_idx = -1;
+        if (node->aggr_value == aggr_ri) {
+            if (node->ri != NULL) {
+                node->aggr_idx = node->ri->aggr_idx;
+            }
+        } else {
+            if (node->le != NULL) {
+                node->aggr_idx = node->le->aggr_idx;
+            }
+        }
+    }
+
+    std::pair<T, int> range_query(Node<T> *node, int le, int ri) {
+        if (node == NULL || le >= ri || node->idx_range.first >= ri ||
+            node->idx_range.second <= le) {
+            return {this->identity, -1};
+        }
+        if (node->idx_range.first >= le && node->idx_range.second <= ri) {
+            return {node->aggr_value, node->aggr_idx};
+        }
+        int mid = (le + ri) >> 1;
+        std::pair<T, int> res_le = range_query(node->le, le, ri);
+        std::pair<T, int> res_ri = range_query(node->ri, le, ri);
+        T res_aggr = this->aggr_fn(res_le.first, res_ri.first);
+        if (res_aggr == res_ri.first) {
+            return res_ri;
+        }
+        return res_le;
+    };
+
+    Node<T> *initialize(std::vector<T> &nodes, int le, int ri) {
         if (le >= ri) {
             return NULL;
         }
         if (le == ri - 1) {
             // leaf
-            this->nodes.push_back(nodes[le]);
-            return this->nodes.rbegin();
+            this->nodes.push_back(new Node<T>(le, nodes[le]));
+            return this->nodes.back();
         }
         int mid = (le + ri) >> 1;
-        Node<T, K> *node_left = this->initialize(nodes, le, mid);
-        Node<T, K> *node_right = this->initialize(nodes, mid, ri);
-        this->nodes.push_back(
-            Node<T, K>({le, ri}, this->aggr_fn(*node_left, *node_right))
-                .aggr_value);
-        return this->nodes.rbegin();
+        Node<T> *node_left = this->initialize(nodes, le, mid);
+        Node<T> *node_right = this->initialize(nodes, mid, ri);
+        Node<T> *new_node = new Node<T>({le, ri}, this->identity);
+        new_node->le = node_left;
+        new_node->ri = node_right;
+        this->update(new_node);
+        this->nodes.push_back(new_node);
+        // trace(new_node->idx_range _ new_node->aggr_idx _ new_node->aggr_value);
+        return new_node;
     }
 };
 
@@ -201,33 +281,46 @@ class Solution {
     int numOfUnplacedFruits(std::vector<int> &fruits,
                             std::vector<int> &baskets) {
         int res = 0;
-        sort(all(fruits));
-        std::vector<Node> nodes;
-        for (int i: range(sz(baskets))) {
-            nodes.push_back(Node(baskets[i], i));
+        n = sz(baskets);
+        // sort(all(fruits));
+
+        // map the values to the ranged sequence numbers
+        vi baskets_bak = vi(all(baskets));
+        std::map<int, int> mp;
+        sort(all(baskets_bak));
+        for (int i: range(n)) {
+            int basket = baskets_bak[i];
+            if (mp.find(basket) != mp.end()) {
+                continue;
+            }
+            mp[basket] = i;
         }
-        sort(all(nodes), [](const Node &a, const Node &b) {
+
+        typedef Node<int> NODE;
+        // std::vector<NODE> nodes;
+        // for (int i: range(sz(baskets))) {
+        //     nodes.push_back(NODE(mp[baskets[i]], i));
+        // }
+        vi sorted_ids(range(n));
+        sort(all(sorted_ids), [&](const int &a, const int &b) {
             // comparator fn
-            return a.cmp_value < b.cmp_value;
+            return baskets[a] < baskets[b];
         });
-        auto sg = SegmentTree<Node>(
-            nodes,
-            [](const Node &a, const Node &b) {
-                // comparator fn
-                return a.cmp_value < b.cmp_value;
-            },
-            [](const Node &a, const Node &b) {
-                // aggregator fn
-                // it's min in this example
-                if (b.aggr_value < a.aggr_value) {
-                    return b;
-                }
-                return a;
-            });
+        // trace(sorted_ids);
+        SegmentTree<int> sg = SegmentTree<int>(
+            sorted_ids,
+            [](const int &a, const int &b) { return std::min(a, b); }, 1e9);
         for (int fruit: fruits) {
-            Node *basket_node = sg.lower_bound(fruit);
-            if (basket_node != NULL) {
-                sg.remove(*basket_node);
+            if (mp.lower_bound(fruit) == mp.end()) {
+                res++;
+                continue;
+            }
+            int mapped_fruit = mp.lower_bound(fruit)->second;
+            pii minimum = sg.aggr_range(mapped_fruit, n);
+            // trace(fruit _ mapped_fruit _ mp.rbegin()->second + 1 _ minimum);
+            if (minimum.first != 1e9 && minimum.second != -1) {
+                // trace("remove" _ minimum.second);
+                sg.remove(minimum.second);
             } else {
                 res++;
             }
@@ -235,39 +328,3 @@ class Solution {
         return res;
     }
 };
-
-int read_input() {
-    std::cin >> n;
-    return 0;
-}
-
-auto solve() {
-    /**
-     * main logic goes here
-     **/
-    Solution solution = Solution();
-    auto ans = solution.assert_yellow("Hello");
-    return ans;
-}
-
-int second_main() {
-    read_input();
-    auto ans = solve();
-    std::cout << ans << std::endl;
-    return 0;
-}
-
-int main() {
-    Reader::sync();
-    bool test_case = false;
-    if (test_case) {
-        int t;
-        std::cin >> t;
-        while (t--) {
-            second_main();
-        }
-    } else {
-        second_main();
-    }
-    return 0;
-}
