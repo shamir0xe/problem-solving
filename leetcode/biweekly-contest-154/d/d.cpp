@@ -140,128 +140,40 @@ class Reader {
  * define variables here
  **/
 const int maxn = 1000 * 100 + 5;
-int n;
 
 /**
  * define functions here
  **/
-namespace atcoder {
 
-namespace internal {
-
-#ifndef _MSC_VER
-template <class T>
-using is_signed_int128 =
-    typename std::conditional<std::is_same<T, __int128_t>::value ||
-                                  std::is_same<T, __int128>::value,
-                              std::true_type, std::false_type>::type;
-
-template <class T>
-using is_unsigned_int128 =
-    typename std::conditional<std::is_same<T, __uint128_t>::value ||
-                                  std::is_same<T, unsigned __int128>::value,
-                              std::true_type, std::false_type>::type;
-
-template <class T>
-using make_unsigned_int128 =
-    typename std::conditional<std::is_same<T, __int128_t>::value, __uint128_t,
-                              unsigned __int128>;
-
-template <class T>
-using is_integral =
-    typename std::conditional<std::is_integral<T>::value ||
-                                  is_signed_int128<T>::value ||
-                                  is_unsigned_int128<T>::value,
-                              std::true_type, std::false_type>::type;
-
-template <class T>
-using is_signed_int =
-    typename std::conditional<(is_integral<T>::value &&
-                               std::is_signed<T>::value) ||
-                                  is_signed_int128<T>::value,
-                              std::true_type, std::false_type>::type;
-
-template <class T>
-using is_unsigned_int =
-    typename std::conditional<(is_integral<T>::value &&
-                               std::is_unsigned<T>::value) ||
-                                  is_unsigned_int128<T>::value,
-                              std::true_type, std::false_type>::type;
-
-template <class T>
-using to_unsigned = typename std::conditional<
-    is_signed_int128<T>::value, make_unsigned_int128<T>,
-    typename std::conditional<std::is_signed<T>::value, std::make_unsigned<T>,
-                              std::common_type<T>>::type>::type;
-
-#else
-
-template <class T> using is_integral = typename std::is_integral<T>;
-
-template <class T>
-using is_signed_int =
-    typename std::conditional<is_integral<T>::value && std::is_signed<T>::value,
-                              std::true_type, std::false_type>::type;
-
-template <class T>
-using is_unsigned_int =
-    typename std::conditional<is_integral<T>::value &&
-                                  std::is_unsigned<T>::value,
-                              std::true_type, std::false_type>::type;
-
-template <class T>
-using to_unsigned =
-    typename std::conditional<is_signed_int<T>::value, std::make_unsigned<T>,
-                              std::common_type<T>>::type;
-
-#endif
-
-template <class T>
-using is_signed_int_t = std::enable_if_t<is_signed_int<T>::value>;
-
-template <class T>
-using is_unsigned_int_t = std::enable_if_t<is_unsigned_int<T>::value>;
-
-template <class T> using to_unsigned_t = typename to_unsigned<T>::type;
-
-} // namespace internal
-// Reference: https://en.wikipedia.org/wiki/Fenwick_tree
-template <class T> struct fenwick_tree {
-    using U = internal::to_unsigned_t<T>;
-
+template <class T> class FenwickTree {
   public:
-    fenwick_tree() : _n(0) {}
-    explicit fenwick_tree(int n) : _n(n), data(n) {}
-
-    void add(int p, T x) {
-        assert(0 <= p && p < _n);
+    FenwickTree(int n) : n(n), tree(n, 0) {}
+    void update(int p, T value) {
+        assert(0 <= p && p < n);
         p++;
-        while (p <= _n) {
-            data[p - 1] += U(x);
+        while (p <= n) {
+            tree[p - 1] += value;
             p += p & -p;
         }
     }
 
-    T sum(int l, int r) {
-        assert(0 <= l && l <= r && r <= _n);
-        return sum(r) - sum(l);
+    T sum(int le, int ri) {
+        assert(0 <= le && le <= ri && ri <= n);
+        return sum(ri) - sum(le);
     }
 
   private:
-    int _n;
-    std::vector<U> data;
-
-    U sum(int r) {
-        U s = 0;
-        while (r > 0) {
-            s += data[r - 1];
-            r -= r & -r;
+    int n;
+    std::vector<T> tree;
+    T sum(int p) {
+        T res = 0;
+        while (p > 0) {
+            res += tree[p - 1];
+            p -= p & -p;
         }
-        return s;
+        return res;
     }
 };
-
-} // namespace atcoder
 
 std::vector<std::map<int, int>> mat;
 vi height, idx, init, color;
@@ -288,7 +200,8 @@ class Solution {
   public:
     std::vector<int> treeQueries(int n, std::vector<std::vector<int>> &edges,
                                  std::vector<std::vector<int>> &queries) {
-        atcoder::fenwick_tree<int> ft(n + 11);
+        FenwickTree<int> ft(n + 11);
+        // atcoder::fenwick_tree<int> ft(n + 11);
         mat = std::vector(n, std::map<int, int>());
         intervals = std::vector(n, std::pair{-1, -1});
         height = vi(n, 0);
@@ -321,8 +234,8 @@ class Solution {
                     std::swap(u, v);
                 }
                 // u is the child of v
-                ft.add(intervals[u].X, delta);
-                ft.add(intervals[u].Y + 1, -delta);
+                ft.update(intervals[u].X, delta);
+                ft.update(intervals[u].Y + 1, -delta);
             } else {
                 // report
                 int u = q[1];
@@ -335,6 +248,7 @@ class Solution {
 };
 
 int read_input() {
+    int n;
     std::cin >> n;
     return 0;
 }
