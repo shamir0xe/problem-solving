@@ -184,34 +184,22 @@ auto solve() {
         int root_value = (ans[0] + alter) / 2;
         ans[0] = -1 * original_p1;
 
-        trace(ans[0] _ root_value);
-
         if (root_value == +1) {
-            if (ans[0] == -1) {
-                flip_query(1);
-                ans[0] = +1;
-            }
-        } else {
-            // root == -1
             if (ans[0] == +1) {
                 flip_query(1);
                 ans[0] = -1;
             }
+        } else {
+            // root == -1
+            if (ans[0] == -1) {
+                flip_query(1);
+                ans[0] = +1;
+            }
         }
-        // root_value == ans[0]_value
+        // root_value != ans[0]_value -> net=0
         for (int i: range(1, n)) {
             first_query(i + 1);
-            int t = Reader::primitive<int>();
-            if (abs(t) == 1 || abs(t) == 3) {
-                // ordinary
-                if (abs(t) == 3) {
-                    ans[i] = ans[0];
-                } else {
-                    ans[i] = -ans[0];
-                }
-            } else {
-                ans[i] = t;
-            }
+            ans[i] = Reader::primitive<int>();
         }
     }
 
@@ -224,12 +212,13 @@ int second_main() {
     for (int i: range(sz(ans))) {
         std::cout << ans[i] << " \n"[i == sz(ans) - 1];
     }
+    std::cout.flush();
     // std::cout << ans << std::endl;
     return 0;
 }
 
 int main() {
-    Reader::sync();
+    // Reader::sync();
     bool test_case = true;
     if (test_case) {
         int t;
