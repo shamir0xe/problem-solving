@@ -1,5 +1,4 @@
 import sys
-import argparse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -423,23 +422,8 @@ def test_routine():
     print(f"{count}/{len(tests)} passed!")
 
 
-def init_parser():
-    arg_parser = argparse.ArgumentParser(
-        prog="CafeBazaar", description="blah blah", epilog="bottom"
-    )
-    arg_parser.add_argument(
-        "--test",
-        help="run tests",
-        required=False,
-        action="store_true",
-    )
-    return arg_parser.parse_args()
-
-
 def main():
-    args = init_parser()
-
-    if args.test:
+    if len(sys.argv) > 1 and "--test" in sys.argv[1]:
         # test phase
         test_routine()
     else:
