@@ -14,6 +14,10 @@ typedef std::vector<int> vi;
 typedef std::vector<long long> vl;
 typedef std::vector<std::vector<int>> vvi;
 typedef std::vector<std::vector<ll>> vvl;
+#define range(i, n) for (int i = 0; i < n; ++i)
+#define rrange(i, n) for (int i = n - 1; i >= 0; --i)
+#define fr(i, a, n) for (int i = a; i < n; ++i)
+#define rfr(i, a, n) for (int i = n - 1; i >= a; --i)
 #define trace(x) std::cerr << #x << " : " << x << std::endl
 #define _ << " " <<
 #define sz(x) ((int)(x).size())
@@ -91,29 +95,8 @@ void smax(T &a, T b, const K callable = []() {}) {
 }
 
 /**
- * range functions
+ * Reader class
  **/
-inline vi range(int idx, int n) {
-    if (n <= idx) {
-        return vi();
-    }
-    vi indices(n - idx);
-    for (int i = idx; i < n; ++i) {
-        indices[i - idx] = i;
-    }
-    return indices;
-}
-
-inline vi range(int n) { return range(0, n); }
-
-inline vi rrange(int idx, int n) {
-    vi order = range(idx, n);
-    reverse(all(order));
-    return order;
-}
-
-inline vi rrange(int n) { return rrange(0, n); }
-
 class Reader {
   public:
     template <typename T> inline static T primitive() {
@@ -124,17 +107,13 @@ class Reader {
 
     template <typename T> static std::vector<T> vector(int n) {
         std::vector<T> res(n);
-        for (int &i: range(n)) {
-            res[i] = Reader::primitive<T>();
-        }
+        range(i, n) { res[i] = Reader::primitive<T>(); }
         return res;
     }
 
     template <typename T, size_t n> static std::array<T, n> array() {
         std::array<T, n> res;
-        for (int &i: range(n)) {
-            res[i] = Reader::primitive<T>();
-        }
+        range(i, n) { res[i] = Reader::primitive<T>(); }
         return res;
     }
 
