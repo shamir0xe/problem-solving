@@ -127,7 +127,6 @@ class Reader {
  * define variables here
  **/
 const int maxn = 1000 * 100 + 5;
-int n;
 
 /**
  * define functions here
@@ -137,17 +136,14 @@ auto solve() {
     /**
      * main logic goes here
      **/
+    int n;
     std::cin >> n;
-    int ans = 0;
-
-    return ans;
+    return 0;
 }
 
 int second_main() {
     auto ans = solve();
-    // for (int i: range(sz(ans))) {
-    //     std::cout << ans[i] << " \n"[i == sz(ans) - 1];
-    // }
+    // range(i, n) { std::cout << ans[i] << " \n"[i == sz(ans) - 1]; }
     std::cout << ans << std::endl;
     return 0;
 }

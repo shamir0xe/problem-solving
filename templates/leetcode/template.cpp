@@ -127,7 +127,6 @@ class Reader {
  * define variables here
  **/
 const int maxn = 1000 * 100 + 5;
-int n;
 
 /**
  * define functions here
@@ -141,7 +140,6 @@ class Solution {
 };
 
 int read_input() {
-    std::cin >> n;
     return 0;
 }
 
