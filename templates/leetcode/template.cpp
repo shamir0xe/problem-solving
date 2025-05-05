@@ -139,9 +139,7 @@ class Solution {
     }
 };
 
-int read_input() {
-    return 0;
-}
+int read_input() { return 0; }
 
 auto solve() {
     /**
