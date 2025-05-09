@@ -142,39 +142,79 @@ auto solve() {
     std::cin >> n >> k;
     std::string mask = Reader::primitive<std::string>();
     vi arr = Reader::vector<int>(n);
+    vl presum = vl(n);
     vl prefix = vl(n, 0);
-    vl min_prefix = vl(n, 0);
     vi zeros;
-    range(i, n) {
-        if (mask[i] == '0')
-            zeros.push_back(i);
-    }
-    range(i, n) {
-        prefix[i] = arr[i];
-        if (i - 1 >= 0)
-            prefix[i] += prefix[i - 1];
-        smin(min_prefix[i], prefix[i]);
-        if (i - 1 >= 0) {
-            smin(min_prefix[i], min_prefix[i - 1]);
-        }
-    }
-    trace(zeros _ prefix _ min_prefix);
-    int best_idx = -1;
     vl ans(n);
     ans.assign(all(arr));
     range(i, n) {
-        int idx = std::lower_bound(all(zeros), i + 1) - zeros.begin();
-        idx--;
-        if (idx < 0)
-            continue;
-        int cur_idx = zeros[idx];
-        ll temp = prefix[i] - min_prefix[cur_idx];
-        if (temp != k) {
-            ans[cur_idx] = k - temp;
-            best_idx = 1;
+        if (mask[i] == '0') {
+            zeros.push_back(i);
+            ans[i] = -1e12;
         }
     }
-    if (best_idx >= 0) {
+    range(i, n) {
+        presum[i] = ans[i];
+        presum[i] += i - 1 >= 0 ? presum[i - 1] : 0;
+        smin(prefix[i], presum[i]);
+        smin(prefix[i], i - 1 >= 0 ? prefix[i - 1] : (ll)1e18);
+    }
+    // trace(zeros _ prefix _ min_prefix);
+
+    auto calc_best = [&](vl arr, bool need_z) -> ll {
+        // trace(arr);
+        vl cs;
+        cs.assign(all(arr));
+        vl prefix(n, 0);
+        range(i, n) {
+            cs[i] += i - 1 >= 0 ? cs[i - 1] : 0;
+            smin(prefix[i], cs[i]);
+            smin(prefix[i], i - 1 >= 0 ? prefix[i - 1] : 0);
+        }
+        ll best = -1e18;
+        if (!need_z) {
+            range(i, n) {
+                if (i - 1 >= 0) {
+                    smax(best, cs[i] - prefix[i - 1]);
+                } else {
+                    smax(best, cs[i]);
+                }
+            }
+        } else {
+            // we need at least one zero
+            range(i, n) {
+                int idx = std::lower_bound(all(zeros), i + 1) - zeros.begin();
+                idx--;
+                if (idx < 0) {
+                    continue;
+                }
+                int alter_idx = zeros[idx] - 1;
+                if (alter_idx < 0) {
+                    smax(best, cs[i]);
+                } else {
+                    smax(best, cs[i] - prefix[alter_idx]);
+                }
+            }
+        }
+        return best;
+    };
+
+    ll best = calc_best(ans, true);
+    range(i, n) {
+        int idx = std::lower_bound(all(zeros), i + 1) - zeros.begin();
+        idx--;
+        if (idx < 0) {
+            continue;
+        }
+        int alter_idx = zeros[idx] - 1;
+        ll cur = presum[i] - (alter_idx >= 0 ? prefix[alter_idx] : 0);
+        if (cur == best) {
+            ans[zeros[idx]] += k - cur;
+            break;
+        }
+    }
+
+    if (calc_best(ans, false) == k) {
         std::cout << "Yes\n";
         range(i, n) std::cout << ans[i] << ' ';
         std::cout << std::endl;
@@ -185,7 +225,7 @@ auto solve() {
 }
 
 int second_main() {
-    auto ans = solve();
+    solve();
     return 0;
 }
 
