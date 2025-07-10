@@ -30,7 +30,7 @@ typedef std::vector<std::vector<ll>> vvl;
  **/
 template <size_t n, typename... T>
 typename std::enable_if<(n >= sizeof...(T))>::type
-__tuple_printer(std::ostream &os, const std::tuple<T...> &tup) {};
+__tuple_printer(std::ostream &os, const std::tuple<T...> &tup) D;
 
 template <size_t n, typename... T>
 typename std::enable_if<(n < sizeof...(T))>::type
@@ -95,6 +95,35 @@ void smax(T &a, T b, const K callable = []() {}) {
 }
 
 /**
+ * Reader class
+ **/
+class Reader {
+  public:
+    template <typename T> inline static T primitive() {
+        T temp;
+        std::cin >> temp;
+        return temp;
+    }
+
+    template <typename T> static std::vector<T> vector(int n) {
+        std::vector<T> res(n);
+        range(i, n) { res[i] = Reader::primitive<T>(); }
+        return res;
+    }
+
+    template <typename T, size_t n> static std::array<T, n> array() {
+        std::array<T, n> res;
+        range(i, n) { res[i] = Reader::primitive<T>(); }
+        return res;
+    }
+
+    static void sync() {
+        std::ios_base::sync_with_stdio(false);
+        std::cin.tie(nullptr);
+    }
+};
+
+/**
  * define variables here
  **/
 const int maxn = 1000 * 100 + 5;
@@ -103,50 +132,33 @@ const int maxn = 1000 * 100 + 5;
  * define functions here
  **/
 
-class Solution {
-  public:
-    std::vector<int> findSubstring(std::string s,
-                                   std::vector<std::string> &words) {
-
-        return vi{};
-    }
-};
-
-std::vector<int> test_1() {
-    std::string s{"barfoothefoobarman"};
-    std::vector<std::string> words{"foo", "bar"};
-    std::vector<int> res = Solution().findSubstring(s, words);
-    return res;
-}
-
-std::vector<int> test_2() {
-    std::string s{"wordgoodgoodgoodbestword"};
-    std::vector<std::string> words{"word", "good", "best", "word"};
-    std::vector<int> res = Solution().findSubstring(s, words);
-    return res;
-}
-
-std::vector<int> test_3() {
-    std::string s{"barfoofoobarthefoobarman"};
-    std::vector<std::string> words{"bar", "foo", "the"};
-    std::vector<int> res = Solution().findSubstring(s, words);
-    return res;
-}
-
-int main() {
-    auto res_1 = test_1();
-    std::cout << "test #1: " << res_1 << std::endl;
-
-    auto res_2 = test_2();
-    std::cout << "test #2: " << res_2 << std::endl;
-
-    auto res_3 = test_3();
-    std::cout << "test #3: " << res_3 << std::endl;
-
+auto solve() {
+    /**
+     * main logic goes here
+     **/
+    int n;
+    std::cin >> n;
     return 0;
 }
 
-//{:snippet}
-//{:cutoff}
-//{:tests}
-//{:main}
+int second_main() {
+    auto ans = solve();
+    // range(i, n) { std::cout << ans[i] << " \n"[i == sz(ans) - 1]; }
+    std::cout << ans << std::endl;
+    return 0;
+}
+
+int main() {
+    Reader::sync();
+    bool test_case = false;
+    if (test_case) {
+        int t;
+        std::cin >> t;
+        while (t--) {
+            second_main();
+        }
+    } else {
+        second_main();
+    }
+    return 0;
+}
