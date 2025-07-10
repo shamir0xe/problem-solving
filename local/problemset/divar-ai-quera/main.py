@@ -10,6 +10,8 @@ def main():
     question_number = int(sys.argv[2]) - 1
     print(f"token: -{token}-")
     questions = [
+        "Write a Python script that initializes a shared counter to zero. Then, create and run a number of concurrent tasks (10 for threads and 10 for processes) that each increment this shared counter a significant number of times (100,000 times per task). Finally, print the final value of the counter after all tasks have completed.",
+        """do what image says at { https://divar-contest.darkube.app/fyvkr93-public.png }""",
         """At UOD (University of Divar), your professor has assigned you a task, You are given a small codebase 
 located in `{https://divar-contest.darkube.app/public-code-bug-fix.zip}` and a logs.txt file. Analyze the logs, identify and fix the bug in the codebase, then run the program (main.py) and return its output as the flag.""",
         "find the first laptop in this url: https://divar-contest.darkube.app/divar_sample.html and return the price in numbers.",

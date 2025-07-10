@@ -1,9 +1,13 @@
 import types
+import collections
+import base64
+import urllib.parse
 import sys
-from typing import List
+from typing import List, Union
 import io
 import zipfile
 from urllib.parse import urljoin, urlparse
+import logging
 import os
 import requests
 from openai import OpenAI
@@ -12,16 +16,40 @@ import json
 import math
 import contextlib
 
+# import easyocr
+# from pycipher import Vigenere
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("")
+
+# --- Global OCR Reader (CRITICAL for performance) ---
+# This loads the model into memory only once when the script starts.
+logger.info("Initializing EasyOCR Reader... (This may take a moment on first run)")
+# OCR_READER = easyocr.Reader(["en"])
+logger.info("EasyOCR Reader initialized.")
+
 
 VIRTUAL_WORKSPACE = {}
 system_prompts = {
-    "problem_sovler": """
+    "times-per": """
+    You are a simple agent that does not need to do anything!
+    You just need to extract the number of `times per task` from the given user query sentence.
+    Then you need to call the 'math_fn' function and pass the `times_per_task` variable to it.
+    The output of this function is the final answer. JUST PRINT WHAT THE FUNCTION GIVE TO YOU!
+    """,
+    "problem_solver": """
     You are a hyper-efficient AI agent built for a programming contest.
     Your primary directive is to follow instructions with absolute precision.
     Analyze the user's prompt, perform all necessary reasoning internally, and provide ONLY the final, requested answer.
+    In the shopping list questions, be careful of a TYPE of the products they chose. use 'sum_list' function to sum their values up.
     Do NOT include any conversational filler, apologies, explanations, or restatements of the question.
     Your output must be the direct result of the user's instruction, and nothing more.
     Your OUTPUT SHOULD BE IN ONE WORD, DON'T OUTPUT ANYTHING ELSE.
+    """,
+    "image-recognition": """
+    Download the image 
+    Use OCR for the given image url and bring back the text as `ciphertext` variable
+    Then decrypt the ciphertext using Vigenere algorithm and find the proper key.
     """,
     "cursor": """
 You are an automated, robotic software developer. Your sole purpose is to solve programming tasks by calling tools.
@@ -53,7 +81,7 @@ class DivarContest:
         messages = [
             {
                 "role": "system",
-                "content": system_prompts["problem_sovler"],
+                "content": system_prompts["problem_solver"],
             },
             {
                 "role": "user",
@@ -61,24 +89,20 @@ class DivarContest:
             },  # "Write the reverse of this text, something is wrong"
             {
                 "role": "assistant",
-                "content": "something is wrong",
+                "content": "wrong is something",
             },
-            {
-                "role": "user",
-                "content": "Respond with the word 'SUCCESS' but spell it backwards.",
-            },
-            {"role": "assistant", "content": "SSECCUS"},
             {"role": "user", "content": question},
         ]
         # A mapping from the function name (str) to the actual Python function object
         available_functions = {
-            "fetch_url": fetch_url,
-            "sum_list": sum_list,
-            "fetch_and_find_links": fetch_and_find_links,
-            "process_zip_from_url": process_zip_from_url,
-            "execute_python_project": execute_python_project,
-            "edit_file": edit_file,
-            "get_file": get_file,
+            "fetch_url": self.fetch_url,
+            "sum_list": self.sum_list,
+            "fetch_and_find_links": self.fetch_and_find_links,
+            "process_zip_from_url": self.process_zip_from_url,
+            "execute_python_project": self.execute_python_project,
+            "edit_file": self.edit_file,
+            "get_file": self.get_file,
+            "math_fn": self.math_fn,
         }
         loop = True
         final_result = ""
@@ -89,7 +113,6 @@ class DivarContest:
                 messages=messages,
                 tools=tools,
                 tool_choice="auto",
-                max_tokens=100,
                 temperature=0.1,
             )
             response_message = response.choices[0].message
@@ -98,7 +121,7 @@ class DivarContest:
             tool_calls = response_message.tool_calls
             if tool_calls:
                 loop = True
-                print(
+                logger.info(
                     f"--- LLM wants to call a tool: {response_message.tool_calls[0].function.name} ---"
                 )
                 # Append the assistant's message with tool calls to the message history
@@ -117,6 +140,9 @@ class DivarContest:
                     # Call the function with the provided arguments
                     function_response = function_to_call(**function_args)
 
+                    if function_name == "math_fn":
+                        return function_response
+
                     # Append the tool's output to the message history
                     messages.append(
                         {
@@ -132,15 +158,32 @@ class DivarContest:
             else:
                 final_result = response_message.content.strip()
 
-        return f"\"{final_result}\""
+        return f"{final_result}"
 
     def _define_tools(self):
         return [
             {
                 "type": "function",
                 "function": {
+                    "name": "math_fn",
+                    "description": "Used for a specific math calculation. Find the single integer number mentioned in the user's prompt, which might be confusingly worded, and pass it to this function. The output of this function is the final answer.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "number_of_times": {
+                                "type": "integer",
+                                "description": "The single integer value extracted from the user's prompt.",
+                            },
+                        },
+                        "required": ["number_of_times"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "fetch_and_find_links",
-                    "description": "Fetches the hyperlinks inside a webpage. Use this to find other pages to navigate to.",
+                    "description": "Fetches the hyperlinks inside a webpage. Use this to find other pages url to navigate to.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -157,7 +200,7 @@ class DivarContest:
                 "type": "function",
                 "function": {
                     "name": "fetch_url",
-                    "description": "Fetches a specific chunk of text from a URL, allowing for reading large pages sequentially. The function returns the content of the chunk, the current chunk number, and the total number of chunks available.",
+                    "description": "Fetches a specific chunk of text from a URL, allowing for reading large pages sequentially. The function returns the content of the chunk, the current chunk number, and the total number of chunks available. If data does not appear in the current chunk, increase the chunk number.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -266,266 +309,292 @@ class DivarContest:
             },
         ]
 
-
-def sum_list(numbers: List[int | float]):
-    """
-    Calculates the sum of a list of numbers.
-    Use this when you need to add multiple numbers together from a list.
-    """
-    try:
-        print(f"--- Calling Tool: sum_list with numbers: {numbers} ---")
-        if not isinstance(numbers, list):
-            return "Error: Input must be a list of numbers."
-
-        total = sum(numbers)
-        return {"sum": total}
-
-    except Exception as e:
-        return f"An unexpected error occurred: {e}"
-
-
-def fetch_and_find_links(url: str):
-    """
-    Lists all found hyperlinks in a url.
-    Use this to find potential pages to visit next.
-    """
-    try:
-        print(f"--- Calling Tool: fetch_and_find_links with url: {url} ---")
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        # --- Find all links ---
-        links = []
-        for a_tag in soup.find_all("a", href=True):
-            # Convert relative URL to absolute URL
-            absolute_link = urljoin(url, a_tag["href"])
-            # Basic filtering to get valid, full URLs
-            if urlparse(absolute_link).scheme in ["http", "https"]:
-                links.append(absolute_link)
-
-        # Return a structured dictionary
-        return {"found_links": list(set(links))}  # Use set to remove duplicate links
-
-    except requests.RequestException as e:
-        return f"Error fetching URL: {e}"
-
-
-URL_CONTENT_CACHE = {}
-CHUNK_SIZE_CHARS = 400000
-
-
-def fetch_url(url: str, chunk_number: int = 1):
-    """
-    Fetches a specific chunk of text content from a URL. Use this to read large webpages piece by piece.
-    Always start with chunk_number 1 and increment to read subsequent parts of the page.
-    """
-    print(
-        f"--- Calling Tool: get_webpage_chunk with url: {url}, chunk: {chunk_number} ---"
-    )
-
-    # Check cache first
-    if url not in URL_CONTENT_CACHE:
+    def sum_list(self, numbers: List[Union[int, float]]):
+        """
+        Calculates the sum of a list of numbers.
+        Use this when you need to add multiple numbers together from a list.
+        """
         try:
-            # Use the core logic from our previous fetch function
-            headers = {"User-Agent": "MyContestAgent/1.0"}
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, "html.parser")
-            for script_or_style in soup(["script", "style"]):
-                script_or_style.decompose()
-            text = soup.get_text()
-            lines = (line.strip() for line in text.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            clean_text = "\n".join(chunk for chunk in chunks if chunk)
+            logger.info(f"--- Calling Tool: sum_list with numbers: {numbers} ---")
+            if not isinstance(numbers, list):
+                return "Error: Input must be a list of numbers."
 
-            # Store the full, clean text in the cache
-            URL_CONTENT_CACHE[url] = clean_text
+            total = sum(numbers)
+            return {"sum": total}
+
         except Exception as e:
-            return f"Error fetching or parsing URL: {e}"
+            return f"An unexpected error occurred: {e}"
 
-    full_content = URL_CONTENT_CACHE[url]
+    def fetch_and_find_links(self, url: str):
+        """
+        Lists all found hyperlinks in a url.
+        Use this to find potential pages to visit next.
+        """
+        try:
+            logger.info(f"--- Calling Tool: fetch_and_find_links with url: {url} ---")
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
 
-    # Calculate total chunks
-    total_chunks = math.ceil(len(full_content) / CHUNK_SIZE_CHARS)
+            soup = BeautifulSoup(response.text, "html.parser")
 
-    if chunk_number > total_chunks or chunk_number < 1:
-        return f"Error: Invalid chunk number. Please request a chunk between 1 and {total_chunks}."
+            # --- Find all links ---
+            links = []
+            for a_tag in soup.find_all("a", href=True):
+                # Convert relative URL to absolute URL
+                absolute_link = urljoin(url, a_tag["href"])
+                # Basic filtering to get valid, full URLs
+                if urlparse(absolute_link).scheme in ["http", "https"]:
+                    links.append(absolute_link)
 
-    # Calculate the start and end index for the requested chunk
-    start_index = (chunk_number - 1) * CHUNK_SIZE_CHARS
-    end_index = start_index + CHUNK_SIZE_CHARS
-    content_chunk = full_content[start_index:end_index]
+            # Return a structured dictionary
+            return {
+                "found_links": list(set(links))
+            }  # Use set to remove duplicate links
 
-    # Return a structured, informative response
-    return {
-        "url": url,
-        "content_snippet": content_chunk,
-        "current_chunk": chunk_number,
-        "total_chunks": total_chunks,
-        "status": f"Successfully retrieved chunk {chunk_number} of {total_chunks}.",
-    }
+        except requests.RequestException as e:
+            return f"Error fetching URL: {e}"
 
+    URL_CONTENT_CACHE = {}
+    CHUNK_SIZE_CHARS = 4000
 
-def process_zip_from_url(url: str):
-    """
-    Downloads a zip file from a URL, extracts its contents entirely in memory,
-    and returns a dictionary of filenames.
-    Use this tool specifically when a URL points to a .zip file.
-    """
-    print(f"--- Calling Tool: process_zip_from_url with url: {url} ---")
+    def fetch_url(self, url: str, chunk_number: int = 1):
+        """
+        Fetches a specific chunk of text content from a URL. Use this to read large webpages piece by piece.
+        Always start with chunk_number 1 and increment to read subsequent parts of the page.
+        """
+        logger.info(
+            f"--- Calling Tool: get_webpage_chunk with url: {url}, chunk: {chunk_number} ---"
+        )
 
-    # Basic validation to fail fast if it's obviously not a zip URL
-    if not url.lower().endswith(".zip"):
-        return "Error: The provided URL does not appear to be a link to a .zip file."
-
-    try:
-        # 1. Download the file content in memory
-        headers = {"User-Agent": "MyContestAgent/1.0"}
-        response = requests.get(url, headers=headers, timeout=20)
-        response.raise_for_status()  # Will raise an error for 4xx/5xx responses
-
-        # 2. Treat the binary content as an in-memory file
-        in_memory_zip = io.BytesIO(response.content)
-
-        global VIRTUAL_WORKSPACE
-        VIRTUAL_WORKSPACE = {}
-
-        # 3. Open and extract the zip file from memory
-        with zipfile.ZipFile(in_memory_zip, "r") as zip_ref:
-            file_list = zip_ref.namelist()
-
-            for filename in file_list:
-                # Ignore MacOS-specific metadata folders/files
-                if (
-                    filename.startswith("__MACOSX/")
-                    or filename.endswith(".DS_Store")
-                    or "__pycache__" in filename
-                    or filename.endswith("/")
-                ):
-                    continue
-                alter = filename
-                idx = alter.rfind("/")
-                if idx > 0:
-                    alter = alter[idx + 1 :]
-
-                # Read the content of each file in the zip
-                with zip_ref.open(filename) as file_in_zip:
-                    try:
-                        # Attempt to decode as text
-                        content = file_in_zip.read().decode("utf-8")
-                        # Snippet the content to avoid being too large
-                        VIRTUAL_WORKSPACE[alter] = content
-                    except UnicodeDecodeError:
-                        # If it's not text (e.g., an image), just note that
-                        VIRTUAL_WORKSPACE[alter] = (
-                            "[Binary Content - Not Readable as Text]"
-                        )
-
-        print(f"~~~ {VIRTUAL_WORKSPACE.keys()}")
-        if not VIRTUAL_WORKSPACE:
-            return "Successfully downloaded and opened the zip file, but it was empty or only contained metadata."
-
-        return VIRTUAL_WORKSPACE.keys()
-
-    except requests.RequestException as e:
-        return f"Network error downloading zip file: {e}"
-    except zipfile.BadZipFile:
-        return "Error: The downloaded file is not a valid zip file or is corrupted."
-    except Exception as e:
-        return f"An unexpected error occurred: {e}"
-
-
-def edit_file(filename: str, new_content: str):
-    """
-    Overwrites a file in the virtual workspace with new content.
-    Use this to apply bug fixes to the code before running it.
-    The 'new_content' should be the complete, corrected code for the file.
-    """
-    print(f"--- Calling Tool: edit_file on file: {filename}/\n{new_content} ---")
-    if filename not in VIRTUAL_WORKSPACE:
-        return f"Error: File '{filename}' not found in the workspace. You must first extract files from a zip."
-
-    VIRTUAL_WORKSPACE[filename] = new_content
-    return f"Successfully updated '{filename}' in the virtual workspace."
-
-
-def get_file(filename: str):
-    """
-    Get a content of each file
-    """
-    print(f"--- Calling tool: Get File")
-    return VIRTUAL_WORKSPACE[filename]
-
-
-def execute_python_project(main_filename: str):
-    """
-    Executes a multi-file Python project from the virtual workspace using a robust
-    `exec` model that correctly handles nested files and imports.
-    """
-    print(f"--- Calling Tool: execute_python_project on main file: {main_filename} ---")
-
-    if main_filename not in VIRTUAL_WORKSPACE:
-        return {
-            "stdout": "",
-            "stderr": f"Error: Main file '{main_filename}' not found in the workspace.",
-        }
-
-    # A list to keep track of modules we've manually added to sys.modules
-    # so we can clean up afterwards.
-    loaded_module_names = []
-
-    try:
-        # --- Step 1: Pre-load all dependency files as modules into sys.modules ---
-        for filename, code in VIRTUAL_WORKSPACE.items():
-            if filename.endswith(".py"):
-                # Convert filepath to a valid Python module path
-                # e.g., 'public-code-bug-fix/error.py' -> 'public-code-bug-fix.error'
-                module_name = os.path.splitext(filename.replace("/", "."))[0]
-
-                # Create a new module object
-                module = types.ModuleType(module_name)
-
-                # Execute the code in the context of the new module
-                exec(code, module.__dict__)
-
-                # Add the populated module to Python's main module cache
-                sys.modules[module_name] = module
-                loaded_module_names.append(module_name)
-                print(
-                    f"--- Pre-loaded module: '{module_name}' from file '{filename}' ---"
+        # Check cache first
+        if url not in self.URL_CONTENT_CACHE:
+            try:
+                # Use the core logic from our previous fetch function
+                headers = {"User-Agent": "MyContestAgent/1.0"}
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, "html.parser")
+                for script_or_style in soup(["script", "style"]):
+                    script_or_style.decompose()
+                text = soup.get_text()
+                lines = (line.strip() for line in text.splitlines())
+                chunks = (
+                    phrase.strip() for line in lines for phrase in line.split("  ")
                 )
+                clean_text = "\n".join(chunk for chunk in chunks if chunk)
 
-        # --- Step 2: Execute the main script ---
-        main_code = VIRTUAL_WORKSPACE[main_filename]
+                # Store the full, clean text in the cache
+                self.URL_CONTENT_CACHE[url] = clean_text
+            except Exception as e:
+                return f"Error fetching or parsing URL: {e}"
 
-        # The globals for the main script can be simple, as all imports
-        # will now be resolved correctly via our populated sys.modules.
-        main_globals = {"__name__": "__main__"}
+        full_content = self.URL_CONTENT_CACHE[url]
 
-        stdout_capture = io.StringIO()
-        stderr_capture = io.StringIO()
+        # Calculate total chunks
+        total_chunks = math.ceil(len(full_content) / self.CHUNK_SIZE_CHARS)
 
-        with contextlib.redirect_stdout(stdout_capture), contextlib.redirect_stderr(
-            stderr_capture
-        ):
-            exec(main_code, main_globals)
+        if chunk_number > total_chunks or chunk_number < 1:
+            return f"Error: Invalid chunk number. Please request a chunk between 1 and {total_chunks}."
 
+        # Calculate the start and end index for the requested chunk
+        start_index = (chunk_number - 1) * self.CHUNK_SIZE_CHARS
+        end_index = start_index + self.CHUNK_SIZE_CHARS
+        content_chunk = full_content[start_index:end_index]
+
+        # Return a structured, informative response
         return {
-            "stdout": stdout_capture.getvalue(),
-            "stderr": stderr_capture.getvalue() or "No errors.",
+            "url": url,
+            "content_snippet": content_chunk,
+            "current_chunk": chunk_number,
+            "total_chunks": total_chunks,
+            "status": f"Successfully retrieved chunk {chunk_number} of {total_chunks}.",
         }
-    except Exception as e:
-        import traceback
 
-        return {
-            "stdout": "",
-            "stderr": f"Execution failed with an exception:\n{traceback.format_exc()}",
-        }
-    finally:
-        # --- Step 3: Clean up sys.modules to prevent side-effects ---
-        for module_name in loaded_module_names:
-            if module_name in sys.modules:
-                del sys.modules[module_name]
-        print("--- Cleaned up loaded modules from sys.modules ---")
+    def process_zip_from_url(self, url: str):
+        """
+        Downloads a zip file from a URL, extracts its contents entirely in memory,
+        and returns a dictionary of filenames.
+        Use this tool specifically when a URL points to a .zip file.
+        """
+        logger.info(f"--- Calling Tool: process_zip_from_url with url: {url} ---")
+
+        # Basic validation to fail fast if it's obviously not a zip URL
+        if not url.lower().endswith(".zip"):
+            return (
+                "Error: The provided URL does not appear to be a link to a .zip file."
+            )
+
+        try:
+            # 1. Download the file content in memory
+            headers = {"User-Agent": "MyContestAgent/1.0"}
+            response = requests.get(url, headers=headers, timeout=20)
+            response.raise_for_status()  # Will raise an error for 4xx/5xx responses
+
+            # 2. Treat the binary content as an in-memory file
+            in_memory_zip = io.BytesIO(response.content)
+
+            self.VIRTUAL_WORKSPACE = {}
+
+            # 3. Open and extract the zip file from memory
+            with zipfile.ZipFile(in_memory_zip, "r") as zip_ref:
+                file_list = zip_ref.namelist()
+
+                for filename in file_list:
+                    # Ignore MacOS-specific metadata folders/files
+                    if (
+                        filename.startswith("__MACOSX/")
+                        or filename.endswith(".DS_Store")
+                        or "__pycache__" in filename
+                        or filename.endswith("/")
+                    ):
+                        continue
+                    alter = filename
+                    idx = alter.rfind("/")
+                    if idx > 0:
+                        alter = alter[idx + 1 :]
+
+                    # Read the content of each file in the zip
+                    with zip_ref.open(filename) as file_in_zip:
+                        try:
+                            # Attempt to decode as text
+                            content = file_in_zip.read().decode("utf-8")
+                            # Snippet the content to avoid being too large
+                            VIRTUAL_WORKSPACE[alter] = content
+                        except UnicodeDecodeError:
+                            # If it's not text (e.g., an image), just note that
+                            VIRTUAL_WORKSPACE[alter] = (
+                                "[Binary Content - Not Readable as Text]"
+                            )
+
+            logger.info(f"~~~ {VIRTUAL_WORKSPACE.keys()}")
+            if not VIRTUAL_WORKSPACE:
+                return "Successfully downloaded and opened the zip file, but it was empty or only contained metadata."
+
+            return VIRTUAL_WORKSPACE.keys()
+
+        except requests.RequestException as e:
+            return f"Network error downloading zip file: {e}"
+        except zipfile.BadZipFile:
+            return "Error: The downloaded file is not a valid zip file or is corrupted."
+        except Exception as e:
+            return f"An unexpected error occurred: {e}"
+
+    def edit_file(self, filename: str, new_content: str):
+        """
+        Overwrites a file in the virtual workspace with new content.
+        Use this to apply bug fixes to the code before running it.
+        The 'new_content' should be the complete, corrected code for the file.
+        """
+        logger.info(
+            f"--- Calling Tool: edit_file on file: {filename}/\n{new_content} ---"
+        )
+        if filename not in VIRTUAL_WORKSPACE:
+            return f"Error: File '{filename}' not found in the workspace. You must first extract files from a zip."
+
+        VIRTUAL_WORKSPACE[filename] = new_content
+        return f"Successfully updated '{filename}' in the virtual workspace."
+
+    def get_file(self, filename: str):
+        """
+        Get a content of each file
+        """
+        logger.info(f"--- Calling tool: Get File")
+        return VIRTUAL_WORKSPACE[filename]
+
+    def execute_python_project(self, main_filename: str):
+        """
+        Executes a multi-file Python project from the virtual workspace using a robust
+        `exec` model that correctly handles nested files and imports.
+        """
+        logger.info(
+            f"--- Calling Tool: execute_python_project on main file: {main_filename} ---"
+        )
+
+        if main_filename not in VIRTUAL_WORKSPACE:
+            return {
+                "stdout": "",
+                "stderr": f"Error: Main file '{main_filename}' not found in the workspace.",
+            }
+
+        # A list to keep track of modules we've manually added to sys.modules
+        # so we can clean up afterwards.
+        loaded_module_names = []
+
+        try:
+            # --- Step 1: Pre-load all dependency files as modules into sys.modules ---
+            for filename, code in VIRTUAL_WORKSPACE.items():
+                if filename.endswith(".py"):
+                    # Convert filepath to a valid Python module path
+                    # e.g., 'public-code-bug-fix/error.py' -> 'public-code-bug-fix.error'
+                    module_name = os.path.splitext(filename.replace("/", "."))[0]
+
+                    # Create a new module object
+                    module = types.ModuleType(module_name)
+
+                    # Execute the code in the context of the new module
+                    exec(code, module.__dict__)
+
+                    # Add the populated module to Python's main module cache
+                    sys.modules[module_name] = module
+                    loaded_module_names.append(module_name)
+                    logger.info(
+                        f"--- Pre-loaded module: '{module_name}' from file '{filename}' ---"
+                    )
+
+            # --- Step 2: Execute the main script ---
+            main_code = VIRTUAL_WORKSPACE[main_filename]
+
+            # The globals for the main script can be simple, as all imports
+            # will now be resolved correctly via our populated sys.modules.
+            main_globals = {"__name__": "__main__"}
+
+            stdout_capture = io.StringIO()
+            stderr_capture = io.StringIO()
+
+            with contextlib.redirect_stdout(stdout_capture), contextlib.redirect_stderr(
+                stderr_capture
+            ):
+                exec(main_code, main_globals)
+
+            return {
+                "stdout": stdout_capture.getvalue(),
+                "stderr": stderr_capture.getvalue() or "No errors.",
+            }
+        except Exception as e:
+            import traceback
+
+            return {
+                "stdout": "",
+                "stderr": f"Execution failed with an exception:\n{traceback.format_exc()}",
+            }
+        finally:
+            # --- Step 3: Clean up sys.modules to prevent side-effects ---
+            for module_name in loaded_module_names:
+                if module_name in sys.modules:
+                    del sys.modules[module_name]
+            logger.info("--- Cleaned up loaded modules from sys.modules ---")
+
+    def math_fn(self, number_of_times: int):
+        return f'{{"threads": {number_of_times * 10}, "processes": {number_of_times * 10}}}'
+
+
+# def read_text_from_image_url(url: str):
+#     """
+#     Downloads an image from a URL and uses OCR to extract text from it.
+#     This is the first step for any image-based task.
+#     """
+#     logger.info(f"--- Calling Tool: read_text_from_image_url with url: {url} ---")
+#
+#     try:
+#         response = requests.get(url, timeout=20)
+#         response.raise_for_status()
+#         image_bytes = response.content
+#         detections = OCR_READER.readtext(image_bytes)
+#         if not detections:
+#             return "Error: No text found in the image."
+#         extracted_text = " ".join([text for bbox, text, score in detections])
+#         logger.info(f"img text: {extracted_text}")
+#         return {"extracted_text": extracted_text}
+#     except Exception as e:
+#         return f"Error processing image: {e}"
+#
