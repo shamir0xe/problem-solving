@@ -13,7 +13,7 @@
   "executor": {
     "commands": {
       "cpp": {
-        "compile": "g++ -std=c++17 -O2 -w {}  -o out",
+        "compile": "g++ -std=c++17 -O2 -w {} -o out",
         "run": "./out"
       },
       "python": {
@@ -48,6 +48,12 @@
         "codewars",
         "cw",
         "codew"
+      ]
+    },
+    "usaco": {
+      "abbreviations": [
+        "usaco",
+        "usa"
       ]
     },
     "local": {
@@ -122,6 +128,18 @@
       ]
     },
     "codewars": {
+      "cpp": [
+        "templates",
+        "codeforces",
+        "template.cpp"
+      ],
+      "python": [
+        "templates",
+        "codeforces",
+        "template.py"
+      ]
+    },
+    "usaco": {
       "cpp": [
         "templates",
         "codeforces",
