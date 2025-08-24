@@ -142,12 +142,12 @@
     "usaco": {
       "cpp": [
         "templates",
-        "codeforces",
+        "usaco",
         "template.cpp"
       ],
       "python": [
         "templates",
-        "codeforces",
+        "usaco",
         "template.py"
       ]
     },
