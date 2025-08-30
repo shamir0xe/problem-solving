@@ -18,6 +18,10 @@
       },
       "python": {
         "run": "python3 {}"
+      },
+      "go": {
+        "compile": "go build -o out {}",
+        "run": "./out"
       }
     }
   },
@@ -83,6 +87,14 @@
       "extensions": [
         "py"
       ]
+    },
+    "go": {
+      "abbreviations": [
+        "go"
+      ],
+      "extensions": [
+        "go"
+      ]
     }
   },
   "problemset": {
@@ -101,6 +113,11 @@
         "templates",
         "leetcode",
         "template.py"
+      ],
+      "go": [
+        "templates",
+        "leetcode",
+        "template.go"
       ]
     },
     "codeforces": {
@@ -113,6 +130,11 @@
         "templates",
         "codeforces",
         "template.py"
+      ],
+      "go": [
+        "templates",
+        "leetcode",
+        "template.go"
       ]
     },
     "atcoder": {
@@ -125,6 +147,11 @@
         "templates",
         "codeforces",
         "template.py"
+      ],
+      "go": [
+        "templates",
+        "leetcode",
+        "template.go"
       ]
     },
     "codewars": {
@@ -137,6 +164,11 @@
         "templates",
         "codeforces",
         "template.py"
+      ],
+      "go": [
+        "templates",
+        "leetcode",
+        "template.go"
       ]
     },
     "usaco": {
@@ -161,6 +193,11 @@
         "templates",
         "codeforces",
         "template.py"
+      ],
+      "go": [
+        "templates",
+        "leetcode",
+        "template.go"
       ]
     }
   }
