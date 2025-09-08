@@ -31,6 +31,7 @@ func inRange(x, y int) bool {
 	return x >= 0 && x < n && y >= 0 && y < n
 }
 
+// main function
 func maxMoves(kx int, ky int, positions [][]int) int {
 	var m int = len(positions)
 	// make dis[m+1][m+1]: shortest path between nodes
@@ -42,12 +43,12 @@ func maxMoves(kx int, ky int, positions [][]int) int {
 		}
 	}
 
-	// append the night position as the last element
+	// append the knight position as the last element
 	positions = append(positions, []int{kx, ky})
 
-	var cellCurCollor [][]int8 = make([][]int8, n)
+	var cellCurColor [][]int8 = make([][]int8, n)
 	for i := range n {
-		cellCurCollor[i] = make([]int8, n)
+		cellCurColor[i] = make([]int8, n)
 	}
 
 	type Elem struct {
@@ -66,16 +67,16 @@ func maxMoves(kx int, ky int, positions [][]int) int {
 	}
 
 	var curColor int8 = 0
+	// do BFS m+1 times
 	for u := range m + 1 {
-		// do BFS m+1 times
 		curColor++
 		var count int = 0
 		dis[u][u] = 0
-		qu := list.New()
-		qu.PushBack(Elem{positions[u], 0})
-		for count < m && qu.Len() > 0 {
-			front := qu.Front().Value.(Elem)
-			qu.Remove(qu.Front())
+		q := list.New()
+		q.PushBack(Elem{positions[u], 0})
+		for count < m && q.Len() > 0 {
+			front := q.Front().Value.(Elem)
+			q.Remove(q.Front())
 			// update distances
 			for v := range m + 1 {
 				if sliceEqual(positions[v], front.Position) && dis[u][v] == -1 {
@@ -87,9 +88,9 @@ func maxMoves(kx int, ky int, positions [][]int) int {
 			for _, move := range knightMoves {
 				x := move[0] + front.Position[0]
 				y := move[1] + front.Position[1]
-				if inRange(x, y) && cellCurCollor[x][y] != curColor {
-					cellCurCollor[x][y] = curColor
-					qu.PushBack(Elem{[]int{x, y}, front.Distance + 1})
+				if inRange(x, y) && cellCurColor[x][y] != curColor {
+					cellCurColor[x][y] = curColor
+					q.PushBack(Elem{[]int{x, y}, front.Distance + 1})
 				}
 			}
 		}
@@ -131,6 +132,8 @@ func maxMoves(kx int, ky int, positions [][]int) int {
 			}
 		}
 	}
+
+	// calculate the final answer
 	var ans int = 0
 	for i := range m {
 		ans = max(ans, dis[m][i]+dp[((1<<m)-1)^(1<<i)][i])
