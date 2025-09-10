@@ -72,6 +72,7 @@ func maxMoves(kx int, ky int, positions [][]int) int {
 		curColor++
 		var count int = 0
 		dis[u][u] = 0
+		cellCurColor[positions[u][0]][positions[u][1]] = curColor
 		q := list.New()
 		q.PushBack(Elem{positions[u], 0})
 		for count < m && q.Len() > 0 {
