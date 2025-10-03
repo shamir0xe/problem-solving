@@ -1,7 +1,11 @@
+<<<<<<< HEAD
 """
 LANG: PYTHON3
 TASK: milk2
 """
+=======
+import sys
+>>>>>>> 6401afc (wip: Middle of milking-cows, usaco)
 
 ## usaco, problemset
 ## author: @shamir0xe
@@ -12,6 +16,7 @@ TASK: milk2
 def main():
     # generate input reader
     # generate events based on input
+<<<<<<< HEAD
     fout = open ('milk2.out', 'w')
     fin = open ('milk2.in', 'r')
 
@@ -24,10 +29,15 @@ def main():
         events.append((stop, 1))
     events = sorted(events)
 
+=======
+    in = lambda: sys.stdin.readline().strip()
+    n = int(in())
+>>>>>>> 6401afc (wip: Middle of milking-cows, usaco)
     # iterate over events and update the counter
     # ans:
     # calculate max non-null counter,
     # calculate max null counter,
+<<<<<<< HEAD
     max_not_null, max_null = 0, 0
     counter = 0
     start_milking = -1
@@ -50,6 +60,11 @@ def main():
     # generate output
     fout.write(f"{max_not_null} {max_null}\n")
     fout.close()
+=======
+    
+    # generate output
+    print(f"{max_not_null} {max_null}")
+>>>>>>> 6401afc (wip: Middle of milking-cows, usaco)
 
 
 if __name__ == "__main__":
