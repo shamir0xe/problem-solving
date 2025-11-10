@@ -132,9 +132,7 @@ const int maxn = 1000 * 100 + 5;
  * define functions here
  **/
 
-pii apply(pii a, pii b) {
-  return {std::min(a.X, b.X), std::max(a.Y, b.Y)};
-}
+pii apply(pii a, pii b) { return {std::min(a.X, b.X), std::max(a.Y, b.Y)}; }
 
 auto solve() {
     /**
@@ -142,28 +140,28 @@ auto solve() {
      **/
     int n;
     std::cin >> n;
-    vi a = vi(2, vi(n));
+    auto a = std::vector<vi>(2, vi(n));
     range(i, 2) {
-      range(j, n) {
-        std::cin >> a[i][j];
-      }
+        range(j, n) { std::cin >> a[i][j]; }
     }
-    std::vector<pii> bots;
-    std::vector<pii> tops[2] = {{}, {}};
+    std::vector<pii> bots(n);
+    std::vector<pii> tops[2] = {std::vector<pii>(n), std::vector<pii>(n)};
     rrange(j, n) {
-      bots[j] = {a[1][j], a[1][j]};
-      if (j + 1 < n) {
-        bots[j] = apply(bots[j], bots[j + 1]);
-      }
+        bots[j] = {a[1][j], a[1][j]};
+        if (j + 1 < n) {
+            bots[j] = apply(bots[j], bots[j + 1]);
+        }
+        trace( j _ bots[j] );
     }
 
     rrange(j, n) {
-      tops[0][j] = {a[0][j], a[0][j]};
-      tops[1][j] = {a[0][j], a[0][j]};
-      if (j + 1 < n) {
-        tops[0][j] = apply(tops[0][j], tops[0][j + 1]);
-      }
-      tops[1][j] = apply(tops[1][j], bots[j]);
+        tops[0][j] = {a[0][j], a[0][j]};
+        tops[1][j] = {a[0][j], a[0][j]};
+        if (j + 1 < n) {
+            tops[0][j] = apply(tops[0][j], tops[0][j + 1]);
+        }
+        tops[1][j] = apply(tops[1][j], bots[j]);
+        trace(j _ tops[0][j] _ tops[1][j]);
     }
 
     ll ans = 1ll * tops[0][0].X * (2 * n - tops[0][0].Y + 1);
